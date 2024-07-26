@@ -16,11 +16,11 @@ TARGET = renderer
 # source directries
 SRC_DIR = ./src
 ERRORS_DIR = ./src/errors
-
+EXERCISES_DIR = ./src/exercises
 
 # Source files are stored in the SRC variable 
 # The main.c file is stored in the src directory
-SRCS = $(SRC_DIR)/main.c $(ERRORS_DIR)/errors.c
+SRCS = $(SRC_DIR)/main.c $(ERRORS_DIR)/errors.c $(wildcard $(EXERCISES_DIR)/*.c)
 
 # Object files
 OBJS = $(SRCS:.c=.o)

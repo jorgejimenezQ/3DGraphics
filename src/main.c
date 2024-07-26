@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <SDL2/SDL.h>
 #include "errors/errors.h"
+#include "./excercises/rectangles.c"
 
 
 SDL_Window* window;
@@ -13,7 +14,7 @@ int windowWidth = 800;
 int windowHeight = 600;
 
 // COLORS
-u_int32_t resetColor = 0XFF000000;
+uint32_t resetColor = 0XFF000000;
 
 uint32_t* colorBuffer = NULL;
 SDL_Texture* colorBufferTexture = NULL;
@@ -129,7 +130,8 @@ void drawGrid(void) {
 }
 
 void update(void) {
-    drawGrid();
+    rectangle(100, 100, 200, 100,0XFFFF00FF, colorBuffer, windowWidth);
+    fillRect(200, 300, 200, 100,0XFFFF00FF, colorBuffer, windowWidth);
 }
 
 
@@ -163,6 +165,7 @@ void render(void) {
 
     // Update the texture with new color buffer
     renderColorBuffer(); // Render the color buffer to the screen
+
     // 0X00000000
     clearColorBuffer(resetColor);
 
