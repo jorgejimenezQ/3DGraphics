@@ -18,10 +18,12 @@ SRC_DIR = ./src
 ERRORS_DIR = ./src/errors
 EXERCISES_DIR = ./src/exercises
 DISPLAY_DIR = ./src/display
+DRAW_DIR = ./src/draw
+GEOMETRY_DIR = ./src/geometry
 
 # Source files are stored in the SRC variable 
 # The main.c file is stored in the src directory
-SRCS = $(SRC_DIR)/main.c $(ERRORS_DIR)/errors.c $(wildcard $(EXERCISES_DIR)/*.c) $(wildcard $(DISPLAY_DIR)/*.c)
+SRCS = $(SRC_DIR)/main.c $(ERRORS_DIR)/errors.c $(wildcard $(EXERCISES_DIR)/*.c) $(wildcard $(DISPLAY_DIR)/*.c) $(wildcard $(DRAW_DIR)/*.c) $(wildcard $(GEOMETRY_DIR)/*.c)
 
 # Object files
 OBJS = $(SRCS:.c=.o)
