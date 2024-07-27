@@ -8,8 +8,10 @@ uint32_t resetColor = 0XFF000000;
 uint32_t* colorBuffer = NULL;
 
 // Window dimensions
-int windowWidth = 800;
+int windowWidth = 500;
 int windowHeight = 600;
+
+bool fullScreen = false;
 
 bool initWindow(void) {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
@@ -21,9 +23,11 @@ bool initWindow(void) {
     SDL_DisplayMode displayMode;
     SDL_GetCurrentDisplayMode(0, &displayMode);
 
-    windowWidth = displayMode.w;
-    windowHeight = displayMode.h;
-
+    // Full screen
+    if (fullScreen) {
+        windowWidth = displayMode.w;
+        windowHeight = displayMode.h;
+    }
 
     // Create a SDL window
     window = SDL_CreateWindow(
@@ -55,7 +59,7 @@ bool initWindow(void) {
     // SDL_WINDOW_FULLSCREEN_DESKTOP is used to set the window to fullscreen and
     // keep the same resolution as the desktop. SDL_WINDOW_FULLSCREEN can be used to set the window to fullscreen with the resolution of the window
     // check https://wiki.libsdl.org/SDL_SetWindowFullscreen for more information
-    SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    if (fullScreen) SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 
     return true;
 }

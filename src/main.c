@@ -8,11 +8,15 @@ const int numPoints = 9 * 9 * 9;
 Vec3f cubePoints[numPoints];
 Vec3f cubeRotation = { .x = 0, .y = 0, .z = 0 };
 
+int actualFPS = 0;
+Uint32 frameStart;
+int frameTime;
+
 Vec2f projectedPoints[numPoints];
 
 float fovFactor = 900;
 bool isRunning = false;
-
+int prevFrameTime;
 Vec3f camPosition = { .x = 0, .y = 0, .z = -5};
 
 void setup(void) {
@@ -79,9 +83,19 @@ Vec2f project(Vec3f point ) {
 }
 
 void update(void) {
-    cubeRotation.x += 0.001;
-    cubeRotation.y += 0.0001;
-    cubeRotation.z += 0.001;
+    // int timeToWait = FRAME_TARGET_TIME - (SDL_GetTicks() - prevFrameTime);
+    // // printf("Time to wait: %d\n", timeToWait);
+    // if (timeToWait > 0 && timeToWait <= FRAME_TARGET_TIME) {
+    //     actualFPS = 0;
+    //     SDL_Delay(timeToWait);
+    // }
+
+    prevFrameTime = SDL_GetTicks();
+
+
+    cubeRotation.x += 0.01;
+    cubeRotation.y += 0.01;
+    cubeRotation.z += 0.01;
     for (int i = 0; i < numPoints; i++) {
         Vec3f point = cubePoints[i];
 
@@ -127,16 +141,29 @@ int main(void) {
 
     setup();
 
-    // in mega bytes
-    // 1 byte = 8 bits
-    // 1 kilobyte = 1024 bytes
-    // 1 megabyte = 1024 kilobytes = 1024 * 1024 bytes
-    // printf("An array of 1,000,000,000 Vec4f is %zu gigabytes\n", a * 1000000000 / (1024 * 1024 * 1024));
+    Uint32 startTime = SDL_GetTicks();
+    int frameCount = 0;
 
     while(isRunning) {
+        frameStart = SDL_GetTicks();
+
         processInput();
         update();
         render();
+
+        frameCount++;
+        Uint32 currentTime = SDL_GetTicks();
+        if (currentTime - startTime >= 1000) {
+            actualFPS = frameCount;
+            frameCount = 0;
+            startTime = currentTime;
+            printf("Actual FPS: %d\n", actualFPS);
+        }
+
+        frameTime = SDL_GetTicks() - frameStart;
+        if (frameTime < FRAME_TARGET_TIME) {
+            SDL_Delay(FRAME_TARGET_TIME - frameTime);
+        }
     }
 
     destroyWindow();
