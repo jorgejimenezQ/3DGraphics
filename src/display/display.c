@@ -30,13 +30,23 @@ bool initWindow(void) {
     }
 
     // Create a SDL window
+    // window = SDL_CreateWindow(
+    //         "3D Graphics Engine", 
+    //         SDL_WINDOWPOS_CENTERED,
+    //         SDL_WINDOWPOS_CENTERED,
+    //         windowWidth,
+    //         windowHeight,
+    //         SDL_WINDOW_BORDERLESS       
+    // );
+
+    // Create a SDL window
     window = SDL_CreateWindow(
-            NULL, 
+            "3D Graphics Engine", 
             SDL_WINDOWPOS_CENTERED,
             SDL_WINDOWPOS_CENTERED,
             windowWidth,
             windowHeight,
-            SDL_WINDOW_BORDERLESS       
+            SDL_WINDOW_SHOWN       
     );
 
     if (!window) {

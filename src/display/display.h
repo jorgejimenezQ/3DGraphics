@@ -19,6 +19,7 @@ extern uint32_t resetColor;
 extern uint32_t* colorBuffer; // Buffer to store the color of each pixel in the window
 extern int windowWidth; // Window dimensions
 extern int windowHeight;
+extern bool fullScreen;
 
 bool initWindow(void);
 void destroyWindow(void);

@@ -17,10 +17,13 @@ int frameTime;
 
 Vec2f projectedPoints[numPoints];
 
-float fovFactor = 400;
+float fovFactor = 600;
 bool isRunning = false;
 int prevFrameTime;
 Vec3f camPosition = { .x = 0, .y = 0, .z = -5};
+
+// array of three random colors
+uint32_t colorsRand[3] = {0XFFFFFFFF, 0XFFFF00FF, 0XFF00FFF0};
 
 void rect(int x, int y, int w, int h, uint32_t color) {
     fillRect(
@@ -143,14 +146,15 @@ void update(void) {
     }
 }
 
+void renderLine(Vec2f v1, Vec2f v2, uint32_t color) {
+    drawLine(v1, v2, color, colorBuffer, windowWidth, windowWidth, windowHeight);
+}
+
 
 void render(void) {
-    
     for (int i = 0; i < N_MESH_FACES; i++) {
         Triangle triangle = trianglesToRender[i];
-        rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0XFFFFFF00);
-        rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0XFFFFFF00);
-        rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0XFFFFFF00);
+        drawTriangle(triangle.points, colorsRand[i % 3], colorBuffer, windowWidth, windowWidth, windowHeight);
     }
 
     // Update the texture with new color buffer
