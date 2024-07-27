@@ -6,9 +6,11 @@
 
 const int numPoints = 9 * 9 * 9;
 Vec3f cubePoints[numPoints];
+Vec3f cubeRotation = { .x = 0, .y = 0, .z = 0 };
+
 Vec2f projectedPoints[numPoints];
 
-float fovFactor = 700;
+float fovFactor = 900;
 bool isRunning = false;
 
 Vec3f camPosition = { .x = 0, .y = 0, .z = -5};
@@ -77,11 +79,20 @@ Vec2f project(Vec3f point ) {
 }
 
 void update(void) {
+    cubeRotation.x += 0.001;
+    cubeRotation.y += 0.0001;
+    cubeRotation.z += 0.001;
     for (int i = 0; i < numPoints; i++) {
         Vec3f point = cubePoints[i];
-        point.z -= camPosition.z;
+
+        Vec3f transformedPoint = rotateX(point, cubeRotation.x);
+        transformedPoint = rotateY(transformedPoint, cubeRotation.y);
+        transformedPoint = rotateZ(transformedPoint, cubeRotation.z);
+
+        transformedPoint.z -= camPosition.z;
+
         // project the point
-        Vec2f projectedPoint = project(point);
+        Vec2f projectedPoint = project(transformedPoint);
         projectedPoints[i] = projectedPoint;
     }
 

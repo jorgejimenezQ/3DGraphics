@@ -8,7 +8,7 @@ CC = clang
 
 CFLAGS = -Wall -Wextra -Werror -I/usr/include/SDL2
 
-LDFLAGS = -lSDL2
+LDFLAGS = -lSDL2 -lm
 
 #  TARGET is used to store the name of the executable
 TARGET = renderer
