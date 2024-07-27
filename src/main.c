@@ -14,7 +14,7 @@ int frameTime;
 
 Vec2f projectedPoints[numPoints];
 
-float fovFactor = 900;
+float fovFactor = 400;
 bool isRunning = false;
 int prevFrameTime;
 Vec3f camPosition = { .x = 0, .y = 0, .z = -5};
@@ -157,6 +157,8 @@ int main(void) {
             actualFPS = frameCount;
             frameCount = 0;
             startTime = currentTime;
+            // Clear the terminal screen before printing the actual FPS
+            system("clear");
             printf("Actual FPS: %d\n", actualFPS);
         }
 
