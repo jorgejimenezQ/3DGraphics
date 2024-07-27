@@ -1,0 +1,8 @@
+# c project ignore
+*.o
+*.out
+
+# c++ project ignore
+*.o
+*.out
+
