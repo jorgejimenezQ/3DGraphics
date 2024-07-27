@@ -3,6 +3,9 @@
 #include "./excercises/rectangles.c"
 #include "./draw/draw.h"
 #include "./geometry/geometry.h"
+#include "./geometry/mesh.h"
+
+Triangle trianglesToRender[N_MESH_FACES];
 
 const int numPoints = 9 * 9 * 9;
 Vec3f cubePoints[numPoints];
@@ -18,6 +21,21 @@ float fovFactor = 400;
 bool isRunning = false;
 int prevFrameTime;
 Vec3f camPosition = { .x = 0, .y = 0, .z = -5};
+
+void rect(int x, int y, int w, int h, uint32_t color) {
+    fillRect(
+            x, 
+            y,
+            w,
+            h,
+            color,
+            colorBuffer,
+            windowWidth,
+            windowWidth -1,
+            windowHeight - 1
+    );
+
+}
 
 void setup(void) {
     // (uint32_t*) is a type cast to convert the pointer to a uint32_t pointer
@@ -40,15 +58,6 @@ void setup(void) {
             windowHeight
     );
 
-    int pointCount = 0;
-    for (float x = -1; x <= 1; x += 0.25) {
-        for (float y = -1; y <= 1; y += 0.25) {
-            for (float z = -1; z <= 1; z += 0.25) {
-                Vec3f point = { .x = x, .y = y, .z = z };
-                cubePoints[pointCount++] = point;
-            }
-        }
-    }
 }
 
 void processInput(void) {
@@ -92,39 +101,56 @@ void update(void) {
 
     prevFrameTime = SDL_GetTicks();
 
-
     cubeRotation.x += 0.01;
     cubeRotation.y += 0.01;
     cubeRotation.z += 0.01;
-    for (int i = 0; i < numPoints; i++) {
-        Vec3f point = cubePoints[i];
 
-        Vec3f transformedPoint = rotateX(point, cubeRotation.x);
-        transformedPoint = rotateY(transformedPoint, cubeRotation.y);
-        transformedPoint = rotateZ(transformedPoint, cubeRotation.z);
+    // Get all the faces
+    for (int i = 0; i < N_MESH_FACES; i++) {
+        Face meshFace = meshFaces[i];
 
-        transformedPoint.z -= camPosition.z;
+        Vec3f faceVertices[3] = {
+            meshVertices[meshFace.a - 1], 
+            meshVertices[meshFace.b - 1], 
+            meshVertices[meshFace.c - 1] 
+        };
+        Triangle projectedTriangle;
 
-        // project the point
-        Vec2f projectedPoint = project(transformedPoint);
-        projectedPoints[i] = projectedPoint;
+        for (int j = 0; j < 3; j++) {
+            Vec3f vertex = faceVertices[j];
+
+            // Transformations
+            Vec3f transformedVertex = rotateX(vertex, cubeRotation.x);
+            transformedVertex = rotateY(transformedVertex, cubeRotation.y);
+            transformedVertex = rotateZ(transformedVertex, cubeRotation.z);
+            transformedVertex.z -= camPosition.z;
+
+            // Translate  the vertex away fro the camera
+            transformedVertex.z -= camPosition.z;
+
+            // Project the current vertex
+            Vec2f projectedVertex = project(transformedVertex);
+
+            // Scale and translate to the middle of the screen
+            projectedVertex.x += (windowWidth/2);
+            projectedVertex.y += (windowHeight/2);
+
+            // Save the projected triangle
+            projectedTriangle.points[j] = projectedVertex;
+        }
+        // our array of triangles
+        trianglesToRender[i] = projectedTriangle;
     }
-
 }
 
+
 void render(void) {
-    for (int i = 0; i < numPoints; i++) {
-        Vec2f projectedPoint = projectedPoints[i];
-        fillRect(
-                projectedPoint.x + windowWidth/2, 
-                projectedPoint.y + windowHeight/2, 
-                4, 4,
-                0XFFFFFF00,
-                colorBuffer,
-                windowWidth,
-                windowWidth -1,
-                windowHeight - 1
-        );
+    
+    for (int i = 0; i < N_MESH_FACES; i++) {
+        Triangle triangle = trianglesToRender[i];
+        rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0XFFFFFF00);
+        rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0XFFFFFF00);
+        rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0XFFFFFF00);
     }
 
     // Update the texture with new color buffer
