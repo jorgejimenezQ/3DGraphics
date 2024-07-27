@@ -87,8 +87,6 @@ void update(void) {
 
 }
 
-
-
 void render(void) {
     for (int i = 0; i < numPoints; i++) {
         Vec2f projectedPoint = projectedPoints[i];
