@@ -17,7 +17,7 @@ int frameTime;
 
 Vec2f projectedPoints[numPoints];
 
-float fovFactor = 600;
+float fovFactor = 620;
 bool isRunning = false;
 int prevFrameTime;
 Vec3f camPosition = { .x = 0, .y = 0, .z = -5};
@@ -88,7 +88,7 @@ void processInput(void) {
 Vec2f project(Vec3f point ) {
     Vec2f projectedPoint = {
         .x = (fovFactor * point.x) / point.z,
-        .y = (fovFactor * point.y) / point.z
+        .y = (fovFactor * point.y) /point.z
     };
     
     return projectedPoint;
@@ -154,6 +154,9 @@ void renderLine(Vec2f v1, Vec2f v2, uint32_t color) {
 void render(void) {
     for (int i = 0; i < N_MESH_FACES; i++) {
         Triangle triangle = trianglesToRender[i];
+        rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0XFFFFFF00);
+        rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0XFFFFFF00);
+        rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0XFFFFFF00);
         drawTriangle(triangle.points, colorsRand[i % 3], colorBuffer, windowWidth, windowWidth, windowHeight);
     }
 
