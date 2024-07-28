@@ -1,3 +1,4 @@
+#include "array.h"
 #include "./display/display.h"
 #include "errors/errors.h"
 #include "./excercises/rectangles.c"
@@ -5,11 +6,13 @@
 #include "./geometry/geometry.h"
 #include "./geometry/mesh.h"
 
-Triangle trianglesToRender[N_MESH_FACES];
+/************************************************************************ */
+// Array of triangles to render on the screen
+/************************************************************************ */
+Triangle* trianglesToRender = NULL;
 
 const int numPoints = 9 * 9 * 9;
 Vec3f cubePoints[numPoints];
-Vec3f cubeRotation = { .x = 0, .y = 0, .z = 0 };
 
 int actualFPS = 0;
 Uint32 frameStart;
@@ -61,6 +64,8 @@ void setup(void) {
             windowHeight
     );
 
+    
+    loadCubeMeshData();
 }
 
 void processInput(void) {
@@ -101,21 +106,22 @@ void update(void) {
     //     actualFPS = 0;
     //     SDL_Delay(timeToWait);
     // }
-
+    trianglesToRender = NULL;
     prevFrameTime = SDL_GetTicks();
 
-    cubeRotation.x += 0.01;
-    cubeRotation.y += 0.01;
-    cubeRotation.z += 0.01;
+    mesh.rotation.x += 0.01;
+    mesh.rotation.y += 0.01;
+    mesh.rotation.z += 0.01;
 
+    int numFaces = array_length(mesh.faces);
     // Get all the faces
-    for (int i = 0; i < N_MESH_FACES; i++) {
-        Face meshFace = meshFaces[i];
+    for (int i = 0; i < numFaces; i++) {
+        Face meshFace = mesh.faces[i];
 
         Vec3f faceVertices[3] = {
-            meshVertices[meshFace.a - 1], 
-            meshVertices[meshFace.b - 1], 
-            meshVertices[meshFace.c - 1] 
+            mesh.vertices[meshFace.a - 1], 
+            mesh.vertices[meshFace.b - 1], 
+            mesh.vertices[meshFace.c - 1] 
         };
         Triangle projectedTriangle;
 
@@ -123,9 +129,9 @@ void update(void) {
             Vec3f vertex = faceVertices[j];
 
             // Transformations
-            Vec3f transformedVertex = rotateX(vertex, cubeRotation.x);
-            transformedVertex = rotateY(transformedVertex, cubeRotation.y);
-            transformedVertex = rotateZ(transformedVertex, cubeRotation.z);
+            Vec3f transformedVertex = rotateX(vertex, mesh.rotation.x);
+            transformedVertex = rotateY(transformedVertex, mesh.rotation.y);
+            transformedVertex = rotateZ(transformedVertex, mesh.rotation.z);
             transformedVertex.z -= camPosition.z;
 
             // Translate  the vertex away fro the camera
@@ -142,7 +148,9 @@ void update(void) {
             projectedTriangle.points[j] = projectedVertex;
         }
         // our array of triangles
-        trianglesToRender[i] = projectedTriangle;
+        // trianglesToRender[i] = projectedTriangle;
+        array_push(trianglesToRender, projectedTriangle);
+
     }
 }
 
@@ -152,14 +160,16 @@ void renderLine(Vec2f v1, Vec2f v2, uint32_t color) {
 
 
 void render(void) {
-    for (int i = 0; i < N_MESH_FACES; i++) {
+    int numTriangles = array_length(trianglesToRender);
+    for (int i = 0; i < numTriangles; i++) {
         Triangle triangle = trianglesToRender[i];
         rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0XFFFFFF00);
         rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0XFFFFFF00);
         rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0XFFFFFF00);
-        drawTriangle(triangle.points, colorsRand[i % 3], colorBuffer, windowWidth, windowWidth, windowHeight);
+        drawTriangle(triangle.points, colorsRand[0], colorBuffer, windowWidth, windowWidth, windowHeight);
     }
 
+    array_free(trianglesToRender);
     // Update the texture with new color buffer
     renderColorBuffer(); // Render the color buffer to the screen
 
@@ -168,7 +178,12 @@ void render(void) {
 
     SDL_RenderPresent(renderer);
 }
-
+void freeResources() {
+    free(colorBuffer);
+    // Dynamic array free 
+    array_free(mesh.faces);
+    array_free(mesh.vertices);
+}
 int main(void) {
     isRunning = initWindow();
 
@@ -201,6 +216,7 @@ int main(void) {
         }
     }
 
+    freeResources();
     destroyWindow();
     return 0;
 }
