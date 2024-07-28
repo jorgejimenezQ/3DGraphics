@@ -20,7 +20,7 @@ int frameTime;
 
 Vec2f projectedPoints[numPoints];
 
-float fovFactor = 620;
+float fovFactor = 800;
 bool isRunning = false;
 int prevFrameTime;
 Vec3f camPosition = { .x = 0, .y = 0, .z = -5};
@@ -64,8 +64,8 @@ void setup(void) {
             windowHeight
     );
 
-    
-    loadCubeMeshData();
+    loadObjFile("assets/f22.obj");
+    // loadCubeMeshData();
 }
 
 void processInput(void) {
@@ -109,9 +109,9 @@ void update(void) {
     trianglesToRender = NULL;
     prevFrameTime = SDL_GetTicks();
 
-    mesh.rotation.x += 0.01;
+    mesh.rotation.x += 0.1;
     mesh.rotation.y += 0.01;
-    mesh.rotation.z += 0.01;
+    mesh.rotation.z += 0.0;
 
     int numFaces = array_length(mesh.faces);
     // Get all the faces
@@ -163,10 +163,10 @@ void render(void) {
     int numTriangles = array_length(trianglesToRender);
     for (int i = 0; i < numTriangles; i++) {
         Triangle triangle = trianglesToRender[i];
-        rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0XFFFFFF00);
-        rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0XFFFFFF00);
-        rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0XFFFFFF00);
-        drawTriangle(triangle.points, colorsRand[0], colorBuffer, windowWidth, windowWidth, windowHeight);
+        // rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0XFFFFFF00);
+        // rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0XFFFFFF00);
+        // rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0XFFFFFF00);
+        drawTriangle(triangle.points, 0XFF00FF00, colorBuffer, windowWidth, windowWidth, windowHeight);
     }
 
     array_free(trianglesToRender);

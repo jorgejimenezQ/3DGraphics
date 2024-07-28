@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "mesh.h"
 #include "../array.h"
 
@@ -50,3 +51,63 @@ void loadCubeMeshData(void) {
         array_push(mesh.faces, cubeFace);
     }
 }
+
+/******************************************************************/
+/**                 R e a d i n g   F i l e                      **/
+/******************************************************************/
+void trashLine(FILE *file) {
+    char ch;
+    while((ch = fgetc(file)) != '\n');
+}
+
+int loadObjFile(char* filepath) {
+    FILE *file;
+    char ch;
+
+    file = fopen(filepath, "r");
+    if (file == NULL) {
+        perror("Error opening the file");
+        return 1;
+    }
+    while((ch = fgetc(file)) != EOF) {
+        if (ch == '\n') continue;
+        char ch2 =  fgetc(file);
+
+        if (ch == 'f') {
+            int a = 0;
+            int b = 0;
+            int c = 0;
+            fscanf(file, "%d/%*d/%*d %d/%*d/%*d %d/%*d/%*d", &a, &b, &c);
+            trashLine(file);
+            Face face = {
+                .a = a,
+                .b = b,
+                .c = c
+            };
+            array_push(mesh.faces, face);
+
+        }  else if(ch == 'v' && ch2 == ' ') {
+            float x = 0.0;
+            float y = 0.0;
+            float z = 0.0;
+
+            fscanf(file, "%f %f %f", &x, &y, &z);
+            trashLine(file);
+            Vec3f vertex = {
+                .x = x,
+                .y = y,
+                .z = z
+            };
+
+            array_push(mesh.vertices, vertex);
+        } else {
+            // TODO: parse vn and vt
+            trashLine(file);
+        }
+    }
+
+    fclose(file);
+
+    return 0;
+}   
+
