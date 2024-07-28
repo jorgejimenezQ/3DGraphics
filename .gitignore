@@ -6,3 +6,8 @@
 *.o
 *.out
 
+*.obj
+*.OBJ
+
+# everything in the assets folder
+assets/*
