@@ -20,10 +20,10 @@ int frameTime;
 
 Vec2f projectedPoints[numPoints];
 
-float fovFactor = 800;
+float fovFactor = 600;
 bool isRunning = false;
 int prevFrameTime;
-Vec3f camPosition = { .x = 0, .y = 0, .z = -5};
+Vec3f camPosition = { 0, 0, 0};
 
 // array of three random colors
 uint32_t colorsRand[3] = {0XFFFFFFFF, 0XFFFF00FF, 0XFF00FFF0};
@@ -64,8 +64,7 @@ void setup(void) {
             windowHeight
     );
 
-    loadObjFile("assets/f22.obj");
-    // loadCubeMeshData();
+    loadObjFile("assets/cube.obj");
 }
 
 void processInput(void) {
@@ -93,27 +92,21 @@ void processInput(void) {
 Vec2f project(Vec3f point ) {
     Vec2f projectedPoint = {
         .x = (fovFactor * point.x) / point.z,
-        .y = (fovFactor * point.y) /point.z
+        .y = (fovFactor * point.y) / point.z
     };
     
     return projectedPoint;
 }
 
 void update(void) {
-    // int timeToWait = FRAME_TARGET_TIME - (SDL_GetTicks() - prevFrameTime);
-    // // printf("Time to wait: %d\n", timeToWait);
-    // if (timeToWait > 0 && timeToWait <= FRAME_TARGET_TIME) {
-    //     actualFPS = 0;
-    //     SDL_Delay(timeToWait);
-    // }
     trianglesToRender = NULL;
-    prevFrameTime = SDL_GetTicks();
 
-    mesh.rotation.x += 0.1;
+    mesh.rotation.x += 0.01;
     mesh.rotation.y += 0.01;
-    mesh.rotation.z += 0.0;
+    mesh.rotation.z += 0.01;
 
     int numFaces = array_length(mesh.faces);
+    bool isBackFace = false;
     // Get all the faces
     for (int i = 0; i < numFaces; i++) {
         Face meshFace = mesh.faces[i];
@@ -125,32 +118,54 @@ void update(void) {
         };
         Triangle projectedTriangle;
 
+        Vec3f transformedVertices[3];
+
+        // TRANSFORMATIONS
         for (int j = 0; j < 3; j++) {
             Vec3f vertex = faceVertices[j];
 
-            // Transformations
             Vec3f transformedVertex = rotateX(vertex, mesh.rotation.x);
             transformedVertex = rotateY(transformedVertex, mesh.rotation.y);
             transformedVertex = rotateZ(transformedVertex, mesh.rotation.z);
-            transformedVertex.z -= camPosition.z;
-
             // Translate  the vertex away fro the camera
-            transformedVertex.z -= camPosition.z;
+            transformedVertex.z += 5;
 
+            // Save the transformed vertex in the array of transformed vertices
+            transformedVertices[j] = transformedVertex;
+        
+            // BACK FACE CULLING
+            if (j == 2) {
+                Vec3f v1 = vec3sub(transformedVertices[1], transformedVertices[0]);
+                Vec3f v2 = vec3sub(transformedVertices[2], transformedVertices[0]);
+                Vec3f faceNormal = vec3cross(v1, v2);
+                vec3normalizeRef(&faceNormal);
+
+                Vec3f camRay = vec3sub(camPosition, transformedVertices[0]);
+                if (vec3dot(faceNormal, camRay) < 0) {
+                    isBackFace = true;
+                    break;
+                }
+            }
+            
+            // PROJECTION
             // Project the current vertex
-            Vec2f projectedVertex = project(transformedVertex);
+            Vec2f projectedVertex = project(transformedVertices[j]);
 
             // Scale and translate to the middle of the screen
             projectedVertex.x += (windowWidth/2);
             projectedVertex.y += (windowHeight/2);
-
             // Save the projected triangle
             projectedTriangle.points[j] = projectedVertex;
         }
+
+        if (isBackFace) {
+            isBackFace = false;
+            continue;
+        }
+
         // our array of triangles
         // trianglesToRender[i] = projectedTriangle;
         array_push(trianglesToRender, projectedTriangle);
-
     }
 }
 
@@ -158,15 +173,15 @@ void renderLine(Vec2f v1, Vec2f v2, uint32_t color) {
     drawLine(v1, v2, color, colorBuffer, windowWidth, windowWidth, windowHeight);
 }
 
-
 void render(void) {
     int numTriangles = array_length(trianglesToRender);
     for (int i = 0; i < numTriangles; i++) {
         Triangle triangle = trianglesToRender[i];
+
+        drawTriangle(triangle.points, 0XFF00FF00, colorBuffer, windowWidth, windowWidth, windowHeight);
         // rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0XFFFFFF00);
         // rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0XFFFFFF00);
         // rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0XFFFFFF00);
-        drawTriangle(triangle.points, 0XFF00FF00, colorBuffer, windowWidth, windowWidth, windowHeight);
     }
 
     array_free(trianglesToRender);
@@ -184,7 +199,39 @@ void freeResources() {
     array_free(mesh.faces);
     array_free(mesh.vertices);
 }
+
 int main(void) {
+
+    // Vec3f v1 = { -1.000000, -1.000000,  1.000000 };
+    // Vec3f v2 = {  1.000000, -1.000000,  1.000000 };
+    // Vec3f v3 = { -1.000000,  1.000000,  1.000000 };
+    // // Vec3f v4 = {  1.000000,  1.000000,  1.000000 };
+    // // Vec3f v5 = { -1.000000,  1.000000, -1.000000 };
+    // // Vec3f v6 = {  1.000000,  1.000000, -1.000000 };
+    // // Vec3f v7 = { -1.000000, -1.000000, -1.000000 };
+    // // Vec3f v8 = {  1.000000, -1.000000, -1.000000 };
+
+
+    // Vec3f vertices[3] = {
+    //     v1, v2, v3
+    // };
+    // //      a
+    // //    /   \
+    // //   c --- b
+    // Vec3f a = vec3sub(vertices[1], vertices[0]);
+    // Vec3f b = vec3sub(vertices[2], vertices[0]);
+    // Vec3f cross = vec3cross(a, b);
+    // printVec(cross);
+
+    // a = vec3sub(vertices[2], vertices[1]);
+    // b = vec3sub(vertices[0], vertices[1]);
+    // cross = vec3cross(a, b);
+    // printVec(cross);
+
+    // a = vec3sub(vertices[0], vertices[2]);
+    // b = vec3sub(vertices[1], vertices[2]);
+    // cross = vec3cross(a, b);
+    // printVec(cross);
     isRunning = initWindow();
 
     setup();

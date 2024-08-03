@@ -100,8 +100,11 @@ int loadObjFile(char* filepath) {
             };
 
             array_push(mesh.vertices, vertex);
-        } else {
-            // TODO: parse vn and vt
+        } else if (ch == 'v' && ch2 == 'n') {
+            // TODO: parse vn
+            trashLine(file);
+        } else if (ch == 'v' && ch2 == 't') {
+            // TODO: parse vt
             trashLine(file);
         }
     }
