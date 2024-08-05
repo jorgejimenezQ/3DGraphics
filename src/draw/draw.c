@@ -3,11 +3,20 @@
 #include <math.h>
 #include <stdlib.h>
 
+void swap(Vec2f* v1, Vec2f* v2) {
+        Vec2f temp = *v2;
+        *v2 = *v1;
+        *v1 = temp;
+}
+
 int drawPixel(int x, int y, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY) {
 
     // Keep the pixel bounded by boundX and boundY parameters and greater than one 
-    if (x < 0 || y < 0) return -1;
-    if (x > boundX || y > boundY) return -1;
+    if (0 >= x || x > (boundX -1)) return -1;
+    if (0 >= y || y > (boundY -1)) return -1;
+    // if (x <= 0 || y <= 0) return -1;
+    // if (x > boundX || y > boundY) return -1;
+
 
     int idx = (y*bufferWidth) + x;
 
@@ -18,7 +27,7 @@ int drawPixel(int x, int y, uint32_t color, uint32_t* buffer, int bufferWidth, i
     return 1;
 }
 
-int drawLine(Vec2f v1, Vec2f v2, uint32_t color, uint32_t *buffer, int bufferWith, int boundX, int boundY) {
+int drawLine(Vec2f v1, Vec2f v2, uint32_t color, uint32_t *buffer, int bufferWidth, int boundX, int boundY) {
     int dx = (v2.x - v1.x);   
     int dy = (v2.y - v1.y);   
 
@@ -31,7 +40,7 @@ int drawLine(Vec2f v1, Vec2f v2, uint32_t color, uint32_t *buffer, int bufferWit
     float currentY = v1.y;
 
     for (int i = 0; i < sideLength; i++) {
-        drawPixel(round(currentX), round(currentY), color, buffer, bufferWith, boundX, boundY);
+        drawPixel(round(currentX), round(currentY), color, buffer, bufferWidth, boundX, boundY);
 
         currentX += xInc;
         currentY += yInc;
@@ -39,11 +48,3 @@ int drawLine(Vec2f v1, Vec2f v2, uint32_t color, uint32_t *buffer, int bufferWit
 
     return 1;
 }  
-
-int drawTriangle(Vec2f* points, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY) {
-    drawLine(points[0], points[1], color, buffer, bufferWidth, boundX, boundY);
-    drawLine(points[1], points[2], color, buffer, bufferWidth, boundX, boundY);
-    drawLine(points[2], points[0], color, buffer, bufferWidth, boundX, boundY);
-
-    return 1;
-}

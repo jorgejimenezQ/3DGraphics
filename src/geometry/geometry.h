@@ -1,6 +1,8 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
+#include <stdint.h>
+
 typedef struct {
     float x, y;
 } Vec2f;
@@ -17,10 +19,12 @@ typedef struct {
 
 typedef struct {
     int a, b, c;
+    uint32_t color;
 } Face;
 
 typedef struct {
     Vec2f points[3];
+    uint32_t color;
 } Triangle;
 
 Vec3f rotateX(Vec3f v, float angle);

@@ -8,36 +8,34 @@ uint32_t resetColor = 0XFF000000;
 uint32_t* colorBuffer = NULL;
 
 // Window dimensions
-int windowWidth = 500;
-int windowHeight = 600;
+int WINDOW_W;
+int WINDOW_H;
+// int windowWidth = 500;
+// int windowHeight = 600;
 
 bool fullScreen = false;
 
-bool initWindow(void) {
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-        fprintf(stderr, "Error initializing SDL.\n");
-        return false;
-    }
+
+
+bool initFullscreenWindow() {
+    fullScreen = true;
 
     // Get the current display mode of the primary display
     SDL_DisplayMode displayMode;
     SDL_GetCurrentDisplayMode(0, &displayMode);
 
-    // Full screen
-    if (fullScreen) {
-        windowWidth = displayMode.w;
-        windowHeight = displayMode.h;
-    }
+    initWindow(displayMode.w, displayMode.h);
 
-    // Create a SDL window
-    // window = SDL_CreateWindow(
-    //         "3D Graphics Engine", 
-    //         SDL_WINDOWPOS_CENTERED,
-    //         SDL_WINDOWPOS_CENTERED,
-    //         windowWidth,
-    //         windowHeight,
-    //         SDL_WINDOW_BORDERLESS       
-    // );
+    return true;
+}
+
+bool initWindow(int windowWidth, int windowHeight) {
+    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+        fprintf(stderr, "Error initializing SDL.\n");
+        return false;
+    }
+    WINDOW_W = windowWidth;
+    WINDOW_H = windowHeight;
 
     // Create a SDL window
     window = SDL_CreateWindow(
@@ -82,9 +80,9 @@ void destroyWindow(void) {
 }
 
 void clearColorBuffer(uint32_t color) {
-    for (int y = 0; y < windowHeight; y++) {
-        for (int x = 0; x < windowWidth; x++) {
-            colorBuffer[(windowWidth * y) + x] = color;
+    for (int y = 0; y < WINDOW_H; y++) {
+        for (int x = 0; x < WINDOW_W; x++) {
+            colorBuffer[(WINDOW_W * y) + x] = color;
         }
     }
 }
@@ -96,7 +94,7 @@ void renderColorBuffer(void) {
             colorBufferTexture, // The SDL texture to update
             NULL, //  A pointer to the rectangle of pixels to update, or NULL to update the entire texture
             colorBuffer, // The pixel data to update the texture with
-            (int)(windowWidth * sizeof(uint32_t)) // The number of bytes in a row of pixel data, including padding between lines
+            (int)(WINDOW_W * sizeof(uint32_t)) // The number of bytes in a row of pixel data, including padding between lines
     );
 
     // Copy the color buffer to the rendering target

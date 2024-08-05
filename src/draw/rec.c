@@ -1,6 +1,4 @@
-#include <stdint.h>
-#include "../draw/draw.h"
-
+#include "./draw.h"
 
 int rectangle(int x, int y, int width, int height, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY) {
 

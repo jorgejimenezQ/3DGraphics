@@ -9,6 +9,7 @@ CC = clang
 CFLAGS = -Wall -Wextra -Werror -I/usr/include/SDL2
 
 LDFLAGS = -lSDL2 -lm
+DEBUG_FLAGS = -g
 
 #  TARGET is used to store the name of the executable
 TARGET = renderer
@@ -16,14 +17,13 @@ TARGET = renderer
 # source directries
 SRC_DIR = ./src
 ERRORS_DIR = ./src/errors
-EXERCISES_DIR = ./src/exercises
 DISPLAY_DIR = ./src/display
 DRAW_DIR = ./src/draw
 GEOMETRY_DIR = ./src/geometry
 
 # Source files are stored in the SRC variable 
 # The main.c file is stored in the src directory
-SRCS = $(wildcard $(SRC_DIR)/*.c) $(ERRORS_DIR)/errors.c $(wildcard $(EXERCISES_DIR)/*.c) $(wildcard $(DISPLAY_DIR)/*.c) $(wildcard $(DRAW_DIR)/*.c) $(wildcard $(GEOMETRY_DIR)/*.c)
+SRCS = $(wildcard $(SRC_DIR)/*.c) $(ERRORS_DIR)/errors.c $(wildcard $(DISPLAY_DIR)/*.c) $(wildcard $(DRAW_DIR)/*.c) $(wildcard $(GEOMETRY_DIR)/*.c)
 
 # Object files
 OBJS = $(SRCS:.c=.o)
@@ -41,6 +41,10 @@ $(SRC_DIR)/%.o: $(SRC_DIR)/%.c
 
 $(ERRORS_DIR)/%.o: $(ERRORS_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
+
+# Debug target
+debug: CFLAGS += $(DEBUG_FLAGS)
+debug: clean $(TARGET)
 
 run: $(TARGET)
 	./$(TARGET)

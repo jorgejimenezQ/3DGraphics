@@ -1,7 +1,6 @@
 #include "array.h"
 #include "./display/display.h"
 #include "errors/errors.h"
-#include "./excercises/rectangles.c"
 #include "./draw/draw.h"
 #include "./geometry/geometry.h"
 #include "./geometry/mesh.h"
@@ -11,22 +10,23 @@
 /************************************************************************ */
 Triangle* trianglesToRender = NULL;
 
-const int numPoints = 9 * 9 * 9;
-Vec3f cubePoints[numPoints];
-
 int actualFPS = 0;
 Uint32 frameStart;
 int frameTime;
-
-Vec2f projectedPoints[numPoints];
-
-float fovFactor = 600;
+// Color buffer
+float fovFactor = 800;
 bool isRunning = false;
 int prevFrameTime;
 Vec3f camPosition = { 0, 0, 0};
-
 // array of three random colors
-uint32_t colorsRand[3] = {0XFFFFFFFF, 0XFFFF00FF, 0XFF00FFF0};
+uint32_t BACKGROUND_COLOR = 0XFF555555;
+uint32_t FOREGROUND_COLOR = 0XFF8888AA;
+uint32_t OUTLINE_COLOR = 0XFF00d000;
+uint32_t RED = 0XFFFF0000;
+// Render mode
+char renderMode = '4';
+bool hasBackFaceCulling = true;
+char transformations = '.';
 
 void rect(int x, int y, int w, int h, uint32_t color) {
     fillRect(
@@ -36,9 +36,9 @@ void rect(int x, int y, int w, int h, uint32_t color) {
             h,
             color,
             colorBuffer,
-            windowWidth,
-            windowWidth -1,
-            windowHeight - 1
+            WINDOW_W,
+            WINDOW_W -1,
+            WINDOW_H - 1
     );
 
 }
@@ -46,7 +46,7 @@ void rect(int x, int y, int w, int h, uint32_t color) {
 void setup(void) {
     // (uint32_t*) is a type cast to convert the pointer to a uint32_t pointer
     // malloc is a function that allocates memory in the heap
-    colorBuffer = (uint32_t*)malloc(sizeof(uint32_t) * windowWidth * windowHeight);
+    colorBuffer = (uint32_t*)malloc(sizeof(uint32_t) * WINDOW_W * WINDOW_H);
     if (!colorBuffer) {
         fprintf(stderr, "Error allocating memory for color buffer.\n");
         exit(1);
@@ -60,26 +60,53 @@ void setup(void) {
             renderer,
             SDL_PIXELFORMAT_ARGB8888,
             SDL_TEXTUREACCESS_STREAMING,
-            windowWidth,
-            windowHeight
+            WINDOW_W,
+            WINDOW_H
     );
 
-    loadObjFile("assets/cube.obj");
+    // loadObjFile("assets/cube.obj");
+    loadCubeMeshData();
 }
 
 void processInput(void) {
     SDL_Event event;
     SDL_PollEvent(&event);
-
+    
     switch(event.type) {
         case SDL_QUIT: {
             isRunning = false;
             break;
         }
         case SDL_KEYDOWN: {
-            if (event.key.keysym.sym == SDLK_ESCAPE) {
+            SDL_KeyCode key = event.key.keysym.sym;
+            if (key == SDLK_ESCAPE) {
                 isRunning = false;
             }
+
+            // Render type
+            if (key == '0' || 
+                key == '1' || 
+                key == '2' || 
+                key == '3' || 
+                key == '4') {
+                    renderMode = key;
+            } 
+
+            // Back Face Culling
+            if (key == 'c' || key == 'd') hasBackFaceCulling = key == 'c';
+
+            // Transformations
+            if (key == 'j' || 
+                key == 'k' || 
+                key == 'h' || 
+                key == 'l' || 
+                key == 'z' ||
+                key == 'Z' ||
+                key == 'r' ||
+                key == '.') { 
+
+                    transformations = key;
+            } 
         }
         default: {
             break;
@@ -98,30 +125,53 @@ Vec2f project(Vec3f point ) {
     return projectedPoint;
 }
 
+void processTransformation() {
+    if (transformations == 'j') mesh.rotation.x -= 0.05;
+    if (transformations == 'k') mesh.rotation.x += 0.05;
+    if (transformations == 'h') mesh.rotation.y -= 0.05;
+    if (transformations == 'l') mesh.rotation.y += 0.05;
+    if (transformations == 'z') mesh.rotation.z += 0.05;
+    if (transformations == 'Z') mesh.rotation.z -= 0.05;
+    
+    if (transformations == 'r') {
+        mesh.rotation.x = 0;
+        mesh.rotation.y = 0;
+        mesh.rotation.z = 0;
+    }
+
+    if (transformations == '.') {
+        mesh.rotation.x += 0;
+        mesh.rotation.y += 0;
+    }
+
+    // Keep the rotation within 360 degrees
+    if (mesh.rotation.x > 360 || mesh.rotation.x < -360) mesh.rotation.x = 0;
+    if (mesh.rotation.y > 360 || mesh.rotation.y < -360) mesh.rotation.y = 0;
+    if (mesh.rotation.z > 360 || mesh.rotation.z < -360) mesh.rotation.z = 0;
+}
+
 void update(void) {
     trianglesToRender = NULL;
 
-    mesh.rotation.x += 0.01;
-    mesh.rotation.y += 0.01;
-    mesh.rotation.z += 0.01;
+    processTransformation();
 
     int numFaces = array_length(mesh.faces);
     bool isBackFace = false;
     // Get all the faces
     for (int i = 0; i < numFaces; i++) {
-        Face meshFace = mesh.faces[i];
+        Face currentFace = mesh.faces[i];
 
         Vec3f faceVertices[3] = {
-            mesh.vertices[meshFace.a - 1], 
-            mesh.vertices[meshFace.b - 1], 
-            mesh.vertices[meshFace.c - 1] 
+            mesh.vertices[currentFace.a - 1], 
+            mesh.vertices[currentFace.b - 1], 
+            mesh.vertices[currentFace.c - 1] 
         };
         Triangle projectedTriangle;
-
         Vec3f transformedVertices[3];
 
-        // TRANSFORMATIONS
         for (int j = 0; j < 3; j++) {
+            /******************************************************/
+            // TRANSFORMATIONS
             Vec3f vertex = faceVertices[j];
 
             Vec3f transformedVertex = rotateX(vertex, mesh.rotation.x);
@@ -133,8 +183,9 @@ void update(void) {
             // Save the transformed vertex in the array of transformed vertices
             transformedVertices[j] = transformedVertex;
         
+            /******************************************************/
             // BACK FACE CULLING
-            if (j == 2) {
+            if (hasBackFaceCulling && j == 2) {
                 Vec3f v1 = vec3sub(transformedVertices[1], transformedVertices[0]);
                 Vec3f v2 = vec3sub(transformedVertices[2], transformedVertices[0]);
                 Vec3f faceNormal = vec3cross(v1, v2);
@@ -147,13 +198,15 @@ void update(void) {
                 }
             }
             
+            /******************************************************/
             // PROJECTION
             // Project the current vertex
             Vec2f projectedVertex = project(transformedVertices[j]);
 
             // Scale and translate to the middle of the screen
-            projectedVertex.x += (windowWidth/2);
-            projectedVertex.y += (windowHeight/2);
+            projectedVertex.x += (WINDOW_W/2);
+            projectedVertex.y += (WINDOW_H/2);
+
             // Save the projected triangle
             projectedTriangle.points[j] = projectedVertex;
         }
@@ -163,6 +216,8 @@ void update(void) {
             continue;
         }
 
+        projectedTriangle.color = currentFace.color;
+
         // our array of triangles
         // trianglesToRender[i] = projectedTriangle;
         array_push(trianglesToRender, projectedTriangle);
@@ -170,7 +225,7 @@ void update(void) {
 }
 
 void renderLine(Vec2f v1, Vec2f v2, uint32_t color) {
-    drawLine(v1, v2, color, colorBuffer, windowWidth, windowWidth, windowHeight);
+    drawLine(v1, v2, color, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
 }
 
 void render(void) {
@@ -178,10 +233,19 @@ void render(void) {
     for (int i = 0; i < numTriangles; i++) {
         Triangle triangle = trianglesToRender[i];
 
-        drawTriangle(triangle.points, 0XFF00FF00, colorBuffer, windowWidth, windowWidth, windowHeight);
-        // rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0XFFFFFF00);
-        // rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0XFFFFFF00);
-        // rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0XFFFFFF00);
+        if (renderMode == '1') {
+            drawTriangle(triangle.points, OUTLINE_COLOR, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+            rect(triangle.points[0].x, triangle.points[0].y, 3, 3, RED);
+            rect(triangle.points[1].x, triangle.points[1].y, 3, 3, RED);
+            rect(triangle.points[2].x, triangle.points[2].y, 3, 3, RED);
+        } else if (renderMode == '2') {
+            drawTriangle(triangle.points, OUTLINE_COLOR, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+        } else if (renderMode == '3') {
+            drawTriangleFill(triangle.points, triangle.color, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+        } else if (renderMode == '4') {
+            drawTriangleFill(triangle.points, triangle.color, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+            drawTriangle(triangle.points, OUTLINE_COLOR, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+        } 
     }
 
     array_free(trianglesToRender);
@@ -189,7 +253,7 @@ void render(void) {
     renderColorBuffer(); // Render the color buffer to the screen
 
     // 0X00000000
-    clearColorBuffer(resetColor);
+    clearColorBuffer(BACKGROUND_COLOR);
 
     SDL_RenderPresent(renderer);
 }
@@ -202,37 +266,7 @@ void freeResources() {
 
 int main(void) {
 
-    // Vec3f v1 = { -1.000000, -1.000000,  1.000000 };
-    // Vec3f v2 = {  1.000000, -1.000000,  1.000000 };
-    // Vec3f v3 = { -1.000000,  1.000000,  1.000000 };
-    // // Vec3f v4 = {  1.000000,  1.000000,  1.000000 };
-    // // Vec3f v5 = { -1.000000,  1.000000, -1.000000 };
-    // // Vec3f v6 = {  1.000000,  1.000000, -1.000000 };
-    // // Vec3f v7 = { -1.000000, -1.000000, -1.000000 };
-    // // Vec3f v8 = {  1.000000, -1.000000, -1.000000 };
-
-
-    // Vec3f vertices[3] = {
-    //     v1, v2, v3
-    // };
-    // //      a
-    // //    /   \
-    // //   c --- b
-    // Vec3f a = vec3sub(vertices[1], vertices[0]);
-    // Vec3f b = vec3sub(vertices[2], vertices[0]);
-    // Vec3f cross = vec3cross(a, b);
-    // printVec(cross);
-
-    // a = vec3sub(vertices[2], vertices[1]);
-    // b = vec3sub(vertices[0], vertices[1]);
-    // cross = vec3cross(a, b);
-    // printVec(cross);
-
-    // a = vec3sub(vertices[0], vertices[2]);
-    // b = vec3sub(vertices[1], vertices[2]);
-    // cross = vec3cross(a, b);
-    // printVec(cross);
-    isRunning = initWindow();
+    isRunning = initWindow(500, 600);
 
     setup();
 
