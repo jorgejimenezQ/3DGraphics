@@ -20,10 +20,11 @@ ERRORS_DIR = ./src/errors
 DISPLAY_DIR = ./src/display
 DRAW_DIR = ./src/draw
 GEOMETRY_DIR = ./src/geometry
+UTILS_DIR = ./src/utils
 
 # Source files are stored in the SRC variable 
 # The main.c file is stored in the src directory
-SRCS = $(wildcard $(SRC_DIR)/*.c) $(ERRORS_DIR)/errors.c $(wildcard $(DISPLAY_DIR)/*.c) $(wildcard $(DRAW_DIR)/*.c) $(wildcard $(GEOMETRY_DIR)/*.c)
+SRCS = $(wildcard $(SRC_DIR)/*.c) $(ERRORS_DIR)/errors.c $(wildcard $(DISPLAY_DIR)/*.c) $(wildcard $(DRAW_DIR)/*.c) $(wildcard $(GEOMETRY_DIR)/*.c) $(wildcard $(UTILS_DIR)/*.c)
 
 # Object files
 OBJS = $(SRCS:.c=.o)

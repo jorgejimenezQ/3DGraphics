@@ -52,10 +52,6 @@ void loadCubeMeshData(void) {
     }
 }
 
-void sortFaces() {
-    
-}
-
 /******************************************************************/
 /**                 R e a d i n g   F i l e                      **/
 /******************************************************************/
@@ -112,10 +108,6 @@ int loadObjFile(char* filepath) {
             trashLine(file);
         }
     }
-
-    // TODO: sort by z value
-    sortFaces();
-
     fclose(file);
     return 0;
 }   

@@ -4,6 +4,7 @@
 #include "./draw/draw.h"
 #include "./geometry/geometry.h"
 #include "./geometry/mesh.h"
+#include "./utils/utils.h"
 
 /************************************************************************ */
 // Array of triangles to render on the screen
@@ -157,15 +158,21 @@ void update(void) {
 
     int numFaces = array_length(mesh.faces);
     bool isBackFace = false;
+
+    // mesh.rotation.x += 0.01;
+    // mesh.rotation.y += 0.01;
+    // mesh.rotation.z += 0.01;
+
     // Get all the faces
     for (int i = 0; i < numFaces; i++) {
+        float zAvg;
         Face currentFace = mesh.faces[i];
-
         Vec3f faceVertices[3] = {
             mesh.vertices[currentFace.a - 1], 
             mesh.vertices[currentFace.b - 1], 
             mesh.vertices[currentFace.c - 1] 
         };
+
         Triangle projectedTriangle;
         Vec3f transformedVertices[3];
 
@@ -197,7 +204,10 @@ void update(void) {
                     break;
                 }
             }
-            
+
+            // Get the average of all the z's 
+            zAvg = (transformedVertices[0].z + transformedVertices[1].z + transformedVertices[2].z) / 3.0;
+
             /******************************************************/
             // PROJECTION
             // Project the current vertex
@@ -209,7 +219,7 @@ void update(void) {
 
             // Save the projected triangle
             projectedTriangle.points[j] = projectedVertex;
-        }
+        } // end of for loop - vertices
 
         if (isBackFace) {
             isBackFace = false;
@@ -217,11 +227,15 @@ void update(void) {
         }
 
         projectedTriangle.color = currentFace.color;
+        projectedTriangle.avgDepth = zAvg;
 
         // our array of triangles
         // trianglesToRender[i] = projectedTriangle;
         array_push(trianglesToRender, projectedTriangle);
-    }
+    } // end of for loop - faces
+
+    // Sort the triangles by their average depth
+    sort(trianglesToRender);
 }
 
 void renderLine(Vec2f v1, Vec2f v2, uint32_t color) {
@@ -265,7 +279,6 @@ void freeResources() {
 }
 
 int main(void) {
-
     isRunning = initWindow(500, 600);
 
     setup();
@@ -299,5 +312,6 @@ int main(void) {
 
     freeResources();
     destroyWindow();
+
     return 0;
 }
