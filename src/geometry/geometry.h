@@ -25,6 +25,7 @@ typedef struct {
 typedef struct {
     Vec2f points[3];
     uint32_t color;
+    float avgDepth;
 } Triangle;
 
 Vec3f rotateX(Vec3f v, float angle);
