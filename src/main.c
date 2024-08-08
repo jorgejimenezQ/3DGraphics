@@ -5,6 +5,7 @@
 #include "./geometry/geometry.h"
 #include "./geometry/mesh.h"
 #include "./utils/utils.h"
+#include "./geometry/matrix.h"
 
 /************************************************************************ */
 // Array of triangles to render on the screen
@@ -279,39 +280,41 @@ void freeResources() {
 }
 
 int main(void) {
-    isRunning = initWindow(500, 600);
+    // isRunning = initWindow(500, 600);
 
-    setup();
+    // setup();
 
-    Uint32 startTime = SDL_GetTicks();
-    int frameCount = 0;
+    // Uint32 startTime = SDL_GetTicks();
+    // int frameCount = 0;
 
-    while(isRunning) {
-        frameStart = SDL_GetTicks();
+    // while(isRunning) {
+    //     frameStart = SDL_GetTicks();
 
-        processInput();
-        update();
-        render();
+    //     processInput();
+    //     update();
+    //     render();
 
-        frameCount++;
-        Uint32 currentTime = SDL_GetTicks();
-        if (currentTime - startTime >= 1000) {
-            actualFPS = frameCount;
-            frameCount = 0;
-            startTime = currentTime;
-            // Clear the terminal screen before printing the actual FPS
-            system("clear");
-            printf("Actual FPS: %d\n", actualFPS);
-        }
+    //     frameCount++;
+    //     Uint32 currentTime = SDL_GetTicks();
+    //     if (currentTime - startTime >= 1000) {
+    //         actualFPS = frameCount;
+    //         frameCount = 0;
+    //         startTime = currentTime;
+    //         // Clear the terminal screen before printing the actual FPS
+    //         system("clear");
+    //         printf("Actual FPS: %d\n", actualFPS);
+    //     }
 
-        frameTime = SDL_GetTicks() - frameStart;
-        if (frameTime < FRAME_TARGET_TIME) {
-            SDL_Delay(FRAME_TARGET_TIME - frameTime);
-        }
-    }
+    //     frameTime = SDL_GetTicks() - frameStart;
+    //     if (frameTime < FRAME_TARGET_TIME) {
+    //         SDL_Delay(FRAME_TARGET_TIME - frameTime);
+    //     }
+    // }
 
-    freeResources();
-    destroyWindow();
+    // freeResources();
+    // destroyWindow();
+
+    matrixExample();
 
     return 0;
 }
