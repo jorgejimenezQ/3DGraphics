@@ -167,7 +167,6 @@ void matrixPrint(Matrix m) {
 }
 void matrixFree(Matrix m) {
     if (m.data == NULL) return;
-    printf("Freeing matrix: %p\n", m.data);
     free(m.data);
 }   
 

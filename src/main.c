@@ -6,6 +6,7 @@
 #include "./geometry/mesh.h"
 #include "./utils/utils.h"
 #include "./geometry/matrix.h"
+#include "./geometry/transformations.h"
 
 /************************************************************************ */
 // Array of triangles to render on the screen
@@ -160,9 +161,36 @@ void update(void) {
     int numFaces = array_length(mesh.faces);
     bool isBackFace = false;
 
-    // mesh.rotation.x += 0.01;
-    // mesh.rotation.y += 0.01;
-    // mesh.rotation.z += 0.01;
+    mesh.rotation.x += 0.01;
+    mesh.rotation.y += 0.01;
+    mesh.rotation.z += 0.01;
+
+    mesh.translation.x = 10;
+    mesh.translation.y = 2;
+    mesh.translation.z = 1;
+
+    mesh.scale.x += 0.002;
+    mesh.scale.y += 0.002;
+    // mesh.scale.z += 0.002;
+
+    // Scale matrix
+    Matrix scaleMatrix;
+    Matrix translationMatrix;
+    Matrix xRotationMatrix;
+    Matrix yRotationMatrix;
+    Matrix zRotationMatrix;
+    createScaleMatrix(&scaleMatrix, mesh.scale.x, mesh.scale.y, mesh.scale.z);
+    createTranslationMatrix(&translationMatrix, mesh.translation.x, mesh.translation.y, mesh.translation.z);
+    createRotationMatrix(&xRotationMatrix, mesh.rotation.x, 'x');
+    createRotationMatrix(&yRotationMatrix, mesh.rotation.y, 'y');
+    createRotationMatrix(&zRotationMatrix, mesh.rotation.z, 'z');
+    
+    Matrix worldMatrix = matrixIdentity(4, 4);
+    worldMatrix = matrixMult(xRotationMatrix, worldMatrix);
+    worldMatrix = matrixMult(yRotationMatrix, worldMatrix);
+    worldMatrix = matrixMult(zRotationMatrix, worldMatrix);
+    worldMatrix = matrixMult(scaleMatrix, worldMatrix);
+    worldMatrix = matrixMult(translationMatrix, worldMatrix);
 
     // Get all the faces
     for (int i = 0; i < numFaces; i++) {
@@ -175,44 +203,59 @@ void update(void) {
         };
 
         Triangle projectedTriangle;
-        Vec3f transformedVertices[3];
-
+        // Vec3f transformedVertices[3];
+        Matrix transformedVertices[3];
+        Matrix currentVertex = matrixCreate(4, 1);
         for (int j = 0; j < 3; j++) {
+            Matrix transformedVertex;
+
             /******************************************************/
             // TRANSFORMATIONS
-            Vec3f vertex = faceVertices[j];
+            currentVertex.data[0] = faceVertices[j].x;
+            currentVertex.data[1] = faceVertices[j].y;
+            currentVertex.data[2] = faceVertices[j].z;
+            currentVertex.data[3] = 1;
 
-            Vec3f transformedVertex = rotateX(vertex, mesh.rotation.x);
-            transformedVertex = rotateY(transformedVertex, mesh.rotation.y);
-            transformedVertex = rotateZ(transformedVertex, mesh.rotation.z);
-            // Translate  the vertex away fro the camera
-            transformedVertex.z += 5;
+            // Rotate Matrix
+            transformedVertex = matrixMult(worldMatrix, currentVertex);
 
             // Save the transformed vertex in the array of transformed vertices
-            transformedVertices[j] = transformedVertex;
-        
+            transformedVertices[j] = matrixCopy(transformedVertex);
+            matrixFree(transformedVertex);
+           
             /******************************************************/
             // BACK FACE CULLING
             if (hasBackFaceCulling && j == 2) {
-                Vec3f v1 = vec3sub(transformedVertices[1], transformedVertices[0]);
-                Vec3f v2 = vec3sub(transformedVertices[2], transformedVertices[0]);
+                Vec3f vec3Vertices[3];
+                for (int k = 0; k < 3; k++) {
+                    vec3Vertices[k].x = transformedVertices[k].data[0];
+                    vec3Vertices[k].y = transformedVertices[k].data[1];
+                    vec3Vertices[k].z = transformedVertices[k].data[2];
+                }
+                Vec3f v1 = vec3sub(vec3Vertices[1], vec3Vertices[0]);
+                Vec3f v2 = vec3sub(vec3Vertices[2], vec3Vertices[0]);
                 Vec3f faceNormal = vec3cross(v1, v2);
                 vec3normalizeRef(&faceNormal);
 
-                Vec3f camRay = vec3sub(camPosition, transformedVertices[0]);
+                Vec3f camRay = vec3sub(camPosition, vec3Vertices[0]);
+                // Get the average of all the z's 
+                zAvg = (transformedVertices[0].data[3] + transformedVertices[1].data[3] + transformedVertices[2].data[3]) / 3.0;
+
                 if (vec3dot(faceNormal, camRay) < 0) {
                     isBackFace = true;
                     break;
                 }
             }
 
-            // Get the average of all the z's 
-            zAvg = (transformedVertices[0].z + transformedVertices[1].z + transformedVertices[2].z) / 3.0;
-
             /******************************************************/
             // PROJECTION
             // Project the current vertex
-            Vec2f projectedVertex = project(transformedVertices[j]);
+            Vec3f vec3Vertex = {
+                .x = transformedVertices[j].data[0],
+                .y = transformedVertices[j].data[1],
+                .z = transformedVertices[j].data[2]
+            };
+            Vec2f projectedVertex = project(vec3Vertex);
 
             // Scale and translate to the middle of the screen
             projectedVertex.x += (WINDOW_W/2);
@@ -233,10 +276,20 @@ void update(void) {
         // our array of triangles
         // trianglesToRender[i] = projectedTriangle;
         array_push(trianglesToRender, projectedTriangle);
+        for (int k = 0;k < 3; k++) {
+            matrixFree(transformedVertices[k]);
+        }
+        matrixFree(currentVertex);
+
     } // end of for loop - faces
 
     // Sort the triangles by their average depth
     sort(trianglesToRender);
+    matrixFree(scaleMatrix);
+    matrixFree(translationMatrix);
+    matrixFree(xRotationMatrix);
+    matrixFree(yRotationMatrix);
+    matrixFree(zRotationMatrix);
 }
 
 void renderLine(Vec2f v1, Vec2f v2, uint32_t color) {
@@ -280,41 +333,49 @@ void freeResources() {
 }
 
 int main(void) {
-    // isRunning = initWindow(500, 600);
+    isRunning = initWindow(500, 600);
 
-    // setup();
+    setup();
 
-    // Uint32 startTime = SDL_GetTicks();
-    // int frameCount = 0;
+    Uint32 startTime = SDL_GetTicks();
+    int frameCount = 0;
 
-    // while(isRunning) {
-    //     frameStart = SDL_GetTicks();
+    while(isRunning) {
+        frameStart = SDL_GetTicks();
 
-    //     processInput();
-    //     update();
-    //     render();
+        processInput();
+        update();
+        render();
 
-    //     frameCount++;
-    //     Uint32 currentTime = SDL_GetTicks();
-    //     if (currentTime - startTime >= 1000) {
-    //         actualFPS = frameCount;
-    //         frameCount = 0;
-    //         startTime = currentTime;
-    //         // Clear the terminal screen before printing the actual FPS
-    //         system("clear");
-    //         printf("Actual FPS: %d\n", actualFPS);
-    //     }
+        frameCount++;
+        Uint32 currentTime = SDL_GetTicks();
+        if (currentTime - startTime >= 1000) {
+            actualFPS = frameCount;
+            frameCount = 0;
+            startTime = currentTime;
+            // Clear the terminal screen before printing the actual FPS
+            system("clear");
+            // Color red if under 24 FPS
+            // else color green
+            if (actualFPS < 24) printf("\033[0;31m");
+            else printf("\033[0;32m");
 
-    //     frameTime = SDL_GetTicks() - frameStart;
-    //     if (frameTime < FRAME_TARGET_TIME) {
-    //         SDL_Delay(FRAME_TARGET_TIME - frameTime);
-    //     }
-    // }
+            printf("Actual FPS: %d\n", actualFPS);
+            // reset the color to default
+            printf("\033[0m");
+            printf("Render Mode: %c\n", renderMode);
+            printf("Back Face Culling: %s\n", hasBackFaceCulling ? "ON" : "OFF");
+            printf("Transformations: %c\n", transformations);
+        }
 
-    // freeResources();
-    // destroyWindow();
+        frameTime = SDL_GetTicks() - frameStart;
+        if (frameTime < FRAME_TARGET_TIME) {
+            SDL_Delay(FRAME_TARGET_TIME - frameTime);
+        }
+    }
 
-    matrixExample();
+    freeResources();
+    destroyWindow();
 
     return 0;
 }

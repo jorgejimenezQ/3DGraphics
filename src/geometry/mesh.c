@@ -6,7 +6,9 @@
 Mesh mesh = {
     .vertices = NULL,
     .faces = NULL,
-    .rotation = { 0, 0, 0 }
+    .rotation = { 0, 0, 0 },
+    .scale = { 1, 1, 1},
+    .translation = { 0, 0, 0}
 };
 
 Vec3f cubeVertices[N_CUBE_VERTICES] = {
