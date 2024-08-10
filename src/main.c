@@ -165,12 +165,12 @@ void update(void) {
     mesh.rotation.y += 0.01;
     mesh.rotation.z += 0.01;
 
-    mesh.translation.x = 10;
-    mesh.translation.y = 2;
-    mesh.translation.z = 1;
+    mesh.translation.x = 1;
+    mesh.translation.y = 1;
+    mesh.translation.z = 10;
 
-    mesh.scale.x += 0.002;
-    mesh.scale.y += 0.002;
+    // mesh.scale.x += 0.002;
+    // mesh.scale.y += 0.002;
     // mesh.scale.z += 0.002;
 
     // Scale matrix
