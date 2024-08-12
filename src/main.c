@@ -117,17 +117,6 @@ void processInput(void) {
     }
 }
 
-/*****************************************************/
-// Takes a 3D vector and returns a projected 2d point
-Vec2f project(Vec3f point ) {
-    Vec2f projectedPoint = {
-        .x = (fovFactor * point.x) / point.z,
-        .y = (fovFactor * point.y) / point.z
-    };
-    
-    return projectedPoint;
-}
-
 void processTransformation() {
     if (transformations == 'j') mesh.rotation.x -= 0.05;
     if (transformations == 'k') mesh.rotation.x += 0.05;
@@ -205,6 +194,7 @@ void update(void) {
         Triangle projectedTriangle;
         // Vec3f transformedVertices[3];
         Matrix transformedVertices[3];
+        // The current vertex as a column vertex
         Matrix currentVertex = matrixCreate(4, 1);
         for (int j = 0; j < 3; j++) {
             Matrix transformedVertex;
@@ -256,6 +246,7 @@ void update(void) {
                 .z = transformedVertices[j].data[2]
             };
             Vec2f projectedVertex = project(vec3Vertex);
+            
 
             // Scale and translate to the middle of the screen
             projectedVertex.x += (WINDOW_W/2);
