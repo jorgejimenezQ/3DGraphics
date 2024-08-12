@@ -30,6 +30,7 @@ uint32_t RED = 0XFFFF0000;
 char renderMode = '4';
 bool hasBackFaceCulling = true;
 char transformations = '.';
+Matrix perspectiveMatrix;
 
 void rect(int x, int y, int w, int h, uint32_t color) {
     fillRect(
@@ -69,6 +70,13 @@ void setup(void) {
 
     // loadObjFile("assets/cube.obj");
     loadCubeMeshData();
+
+    // Initialize the perspective projection matrix
+    float fov = M_PI/3.0;// 60.0 deg in rads
+    float aspect = (float)WINDOW_H/(float)WINDOW_W;
+    float znear = 0.1;
+    float zfar = 100.0;
+    createPerspectiveMatrix(&perspectiveMatrix, fov, aspect, znear, zfar);
 }
 
 void processInput(void) {
@@ -154,8 +162,6 @@ void update(void) {
     mesh.rotation.y += 0.01;
     mesh.rotation.z += 0.01;
 
-    mesh.translation.x = 1;
-    mesh.translation.y = 1;
     mesh.translation.z = 10;
 
     // mesh.scale.x += 0.002;
@@ -215,7 +221,9 @@ void update(void) {
            
             /******************************************************/
             // BACK FACE CULLING
+            // Perform back face culling if enabled and it's the third vertex of the triangle
             if (hasBackFaceCulling && j == 2) {
+                // Calculate the face normal
                 Vec3f vec3Vertices[3];
                 for (int k = 0; k < 3; k++) {
                     vec3Vertices[k].x = transformedVertices[k].data[0];
@@ -227,10 +235,10 @@ void update(void) {
                 Vec3f faceNormal = vec3cross(v1, v2);
                 vec3normalizeRef(&faceNormal);
 
+                // Calculate the vector from the camera position to the first vertex of the triangle
                 Vec3f camRay = vec3sub(camPosition, vec3Vertices[0]);
-                // Get the average of all the z's 
-                zAvg = (transformedVertices[0].data[3] + transformedVertices[1].data[3] + transformedVertices[2].data[3]) / 3.0;
 
+                // Check if the face is facing away from the camera
                 if (vec3dot(faceNormal, camRay) < 0) {
                     isBackFace = true;
                     break;
@@ -240,20 +248,26 @@ void update(void) {
             /******************************************************/
             // PROJECTION
             // Project the current vertex
-            Vec3f vec3Vertex = {
-                .x = transformedVertices[j].data[0],
-                .y = transformedVertices[j].data[1],
-                .z = transformedVertices[j].data[2]
-            };
-            Vec2f projectedVertex = project(vec3Vertex);
-            
+            // Vec3f vec3Vertex = {
+            //     .x = transformedVertices[j].data[0],
+            //     .y = transformedVertices[j].data[1],
+            //     .z = transformedVertices[j].data[2]
+            // };
+            // Vec2f projectedVertex = project(vec3Vertex);
+            Matrix projectedVertex;
+            projectionDivide(&projectedVertex, &perspectiveMatrix, &transformedVertices[j]);
 
-            // Scale and translate to the middle of the screen
-            projectedVertex.x += (WINDOW_W/2);
-            projectedVertex.y += (WINDOW_H/2);
+            // scale
+            projectedVertex.data[0] *= (WINDOW_W/2);
+            projectedVertex.data[1] *= (WINDOW_H/2);
+            // translate to the middle of the screen
+            projectedVertex.data[0] += (WINDOW_W/2);
+            projectedVertex.data[1] += (WINDOW_H/2);
+
 
             // Save the projected triangle
-            projectedTriangle.points[j] = projectedVertex;
+            projectedTriangle.points[j].x = projectedVertex.data[0];
+            projectedTriangle.points[j].y = projectedVertex.data[1];
         } // end of for loop - vertices
 
         if (isBackFace) {
@@ -262,6 +276,8 @@ void update(void) {
         }
 
         projectedTriangle.color = currentFace.color;
+        // Get the average of all the z's 
+        zAvg = (transformedVertices[0].data[2] + transformedVertices[1].data[2] + transformedVertices[2].data[2]) / 3.0;
         projectedTriangle.avgDepth = zAvg;
 
         // our array of triangles
@@ -289,7 +305,7 @@ void renderLine(Vec2f v1, Vec2f v2, uint32_t color) {
 
 void render(void) {
     int numTriangles = array_length(trianglesToRender);
-    for (int i = 0; i < numTriangles; i++) {
+    for (int i = numTriangles - 1; i >= 0; i--) {
         Triangle triangle = trianglesToRender[i];
 
         if (renderMode == '1') {
@@ -318,6 +334,7 @@ void render(void) {
 }
 void freeResources() {
     free(colorBuffer);
+    matrixFree(perspectiveMatrix);
     // Dynamic array free 
     array_free(mesh.faces);
     array_free(mesh.vertices);
@@ -364,6 +381,7 @@ int main(void) {
             SDL_Delay(FRAME_TARGET_TIME - frameTime);
         }
     }
+
 
     freeResources();
     destroyWindow();

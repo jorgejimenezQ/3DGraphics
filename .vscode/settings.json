@@ -2,5 +2,6 @@
     "files.associations": {
         "sdl.h": "c",
         "math.h": "c"
-    }
+    },
+    "cSpell.words": ["zfar", "znear"]
 }
