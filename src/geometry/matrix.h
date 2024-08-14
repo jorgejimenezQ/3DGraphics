@@ -26,6 +26,7 @@ Matrix matrixMult(Matrix m1, Matrix m2);
 Matrix matrixScalarMult(Matrix m, float k);
 Matrix matrixTranspose(Matrix m);
 Matrix matrixInverse(Matrix m);
+// void matrixRow(Matrix *m, int row, float *data);
 Matrix matrixIdentity(int rows, int cols);
 Matrix matrixCopy(Matrix m);
 void matrixPrint(Matrix m);

@@ -68,8 +68,9 @@ void setup(void) {
             WINDOW_H
     );
 
-    // loadObjFile("assets/cube.obj");
+    // loadObjFile("assets/f22.obj");
     loadCubeMeshData();
+
 
     // Initialize the perspective projection matrix
     float fov = M_PI/3.0;// 60.0 deg in rads
@@ -230,6 +231,7 @@ void update(void) {
                     vec3Vertices[k].y = transformedVertices[k].data[1];
                     vec3Vertices[k].z = transformedVertices[k].data[2];
                 }
+
                 Vec3f v1 = vec3sub(vec3Vertices[1], vec3Vertices[0]);
                 Vec3f v2 = vec3sub(vec3Vertices[2], vec3Vertices[0]);
                 Vec3f faceNormal = vec3cross(v1, v2);
@@ -248,12 +250,6 @@ void update(void) {
             /******************************************************/
             // PROJECTION
             // Project the current vertex
-            // Vec3f vec3Vertex = {
-            //     .x = transformedVertices[j].data[0],
-            //     .y = transformedVertices[j].data[1],
-            //     .z = transformedVertices[j].data[2]
-            // };
-            // Vec2f projectedVertex = project(vec3Vertex);
             Matrix projectedVertex;
             projectionDivide(&projectedVertex, &perspectiveMatrix, &transformedVertices[j]);
 
@@ -275,7 +271,9 @@ void update(void) {
             continue;
         }
 
-        projectedTriangle.color = currentFace.color;
+        projectedTriangle.color = currentFace.color != 0 ? currentFace.color : FOREGROUND_COLOR;
+
+        
         // Get the average of all the z's 
         zAvg = (transformedVertices[0].data[2] + transformedVertices[1].data[2] + transformedVertices[2].data[2]) / 3.0;
         projectedTriangle.avgDepth = zAvg;
@@ -292,6 +290,8 @@ void update(void) {
 
     // Sort the triangles by their average depth
     sort(trianglesToRender);
+
+    // Free the matrices
     matrixFree(scaleMatrix);
     matrixFree(translationMatrix);
     matrixFree(xRotationMatrix);
