@@ -6,6 +6,7 @@
 Mesh mesh = {
     .vertices = NULL,
     .faces = NULL,
+    .normals = NULL,
     .rotation = { 0, 0, 0 },
     .scale = { 1, 1, 1},
     .translation = { 0, 0, 0}
@@ -71,9 +72,14 @@ int loadObjFile(char* filepath) {
         perror("Error opening the file");
         return 1;
     }
+    int hashCount = 0;
     while((ch = fgetc(file)) != EOF) {
         if (ch == '\n') continue;
         char ch2 =  fgetc(file);
+
+        // if(ch != '#' ) hashCount = 0;
+        // else if(ch == '#') hashCount++;
+        // if (hashCount == 3) break;
 
         if (ch == 'f') {
             int a = 0;
@@ -103,12 +109,24 @@ int loadObjFile(char* filepath) {
 
             array_push(mesh.vertices, vertex);
         } else if (ch == 'v' && ch2 == 'n') {
+            float x = 0.0;
+            float y = 0.0;
+            float z = 0.0;
+
+            fscanf(file, " %f %f %f", &x, &y, &z);
+            trashLine(file);
+            Vec3f vertex = {
+                .x = x,
+                .y = y,
+                .z = z
+            };
+
+            array_push(mesh.normals, vertex);
             // TODO: parse vn
-            trashLine(file);
         } else if (ch == 'v' && ch2 == 't') {
-            // TODO: parse vt
+            //TODO: parse vt
             trashLine(file);
-        }
+        }   
     }
     fclose(file);
     return 0;

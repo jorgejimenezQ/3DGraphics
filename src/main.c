@@ -13,6 +13,10 @@
 /************************************************************************ */
 Triangle* trianglesToRender = NULL;
 
+// Light
+Light light;
+
+
 int actualFPS = 0;
 Uint32 frameStart;
 int frameTime;
@@ -23,7 +27,7 @@ int prevFrameTime;
 Vec3f camPosition = { 0, 0, 0};
 // array of three random colors
 uint32_t BACKGROUND_COLOR = 0XFF555555;
-uint32_t FOREGROUND_COLOR = 0XFF8888AA;
+uint32_t FOREGROUND_COLOR = 0XFFFFFFFF;
 uint32_t OUTLINE_COLOR = 0XFF00d000;
 uint32_t RED = 0XFFFF0000;
 // Render mode
@@ -56,6 +60,9 @@ void setup(void) {
         exit(1);
     }
 
+    // Light
+    light.direction = vec3normalize((Vec3f){0, 0, 1});
+
     // Create a SDL texture
     // SDL_PIXELFORMAT_ARGB8888 is a 32-bit pixel format, with alpha, red, green, and blue channels
     // check https://wiki.libsdl.org/SDL_CreateTexture for more information
@@ -68,8 +75,8 @@ void setup(void) {
             WINDOW_H
     );
 
-    // loadObjFile("assets/f22.obj");
-    loadCubeMeshData();
+    loadObjFile("assets/f22.obj");
+    // loadCubeMeshData();
 
 
     // Initialize the perspective projection matrix
@@ -151,6 +158,21 @@ void processTransformation() {
     if (mesh.rotation.z > 360 || mesh.rotation.z < -360) mesh.rotation.z = 0;
 }
 
+uint32_t applyLightIntensity(uint32_t color, float percentFactor) {
+    uint32_t maskA = 0XFF000000;
+    uint32_t maskR = 0X00FF0000;
+    uint32_t maskG = 0X0000FF00;
+    uint32_t maskB = 0X000000FF;
+
+
+    uint32_t a = (color & maskA);
+    uint32_t r = (color & maskR) * percentFactor;
+    uint32_t g = (color & maskG) * percentFactor;
+    uint32_t b = (color & maskB) * percentFactor;
+
+    return a | (r & maskR) | (g & maskG) | (b & maskB);
+}
+
 void update(void) {
     trianglesToRender = NULL;
 
@@ -163,7 +185,7 @@ void update(void) {
     mesh.rotation.y += 0.01;
     mesh.rotation.z += 0.01;
 
-    mesh.translation.z = 10;
+    mesh.translation.z = 5;
 
     // mesh.scale.x += 0.002;
     // mesh.scale.y += 0.002;
@@ -203,6 +225,7 @@ void update(void) {
         Matrix transformedVertices[3];
         // The current vertex as a column vertex
         Matrix currentVertex = matrixCreate(4, 1);
+        uint32_t faceColor = currentFace.color ? currentFace.color : FOREGROUND_COLOR ;
         for (int j = 0; j < 3; j++) {
             Matrix transformedVertex;
 
@@ -223,7 +246,7 @@ void update(void) {
             /******************************************************/
             // BACK FACE CULLING
             // Perform back face culling if enabled and it's the third vertex of the triangle
-            if (hasBackFaceCulling && j == 2) {
+            if (j == 2) {
                 // Calculate the face normal
                 Vec3f vec3Vertices[3];
                 for (int k = 0; k < 3; k++) {
@@ -231,7 +254,7 @@ void update(void) {
                     vec3Vertices[k].y = transformedVertices[k].data[1];
                     vec3Vertices[k].z = transformedVertices[k].data[2];
                 }
-
+                
                 Vec3f v1 = vec3sub(vec3Vertices[1], vec3Vertices[0]);
                 Vec3f v2 = vec3sub(vec3Vertices[2], vec3Vertices[0]);
                 Vec3f faceNormal = vec3cross(v1, v2);
@@ -241,10 +264,14 @@ void update(void) {
                 Vec3f camRay = vec3sub(camPosition, vec3Vertices[0]);
 
                 // Check if the face is facing away from the camera
-                if (vec3dot(faceNormal, camRay) < 0) {
+                if (hasBackFaceCulling && vec3dot(faceNormal, camRay) < 0) {
                     isBackFace = true;
                     break;
                 }
+
+                float dotProd = -vec3dot(faceNormal, light.direction);
+                faceColor = applyLightIntensity(faceColor, fabs(dotProd));
+                projectedTriangle.color = faceColor;
             }
 
             /******************************************************/
@@ -256,6 +283,9 @@ void update(void) {
             // scale
             projectedVertex.data[0] *= (WINDOW_W/2);
             projectedVertex.data[1] *= (WINDOW_H/2);
+
+            // Invert the y values to account for flipped screen y coordinate
+            projectedVertex.data[1] *= -1;
             // translate to the middle of the screen
             projectedVertex.data[0] += (WINDOW_W/2);
             projectedVertex.data[1] += (WINDOW_H/2);
@@ -264,6 +294,10 @@ void update(void) {
             // Save the projected triangle
             projectedTriangle.points[j].x = projectedVertex.data[0];
             projectedTriangle.points[j].y = projectedVertex.data[1];
+
+            // if (hasBackFaceCulling && j == 2) {
+            //     // projectedTriangle.color = currentFace.color != 0 ? currentFace.color : faceColor;
+            // }
         } // end of for loop - vertices
 
         if (isBackFace) {
@@ -271,7 +305,6 @@ void update(void) {
             continue;
         }
 
-        projectedTriangle.color = currentFace.color != 0 ? currentFace.color : FOREGROUND_COLOR;
 
         
         // Get the average of all the z's 
@@ -322,6 +355,12 @@ void render(void) {
             drawTriangle(triangle.points, OUTLINE_COLOR, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
         } 
     }
+
+    // Visualize light direction
+
+    Vec2f lightDir = { WINDOW_W/2 + light.direction.x * 50, 10 + light.direction.y * 50};   
+    renderLine((Vec2f){WINDOW_W/2, 10}, lightDir, RED);
+
 
     array_free(trianglesToRender);
     // Update the texture with new color buffer

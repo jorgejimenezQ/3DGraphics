@@ -67,9 +67,19 @@ float vec4dot(Vec4f v1, Vec4f v2);
 
 Vec3f vec3cross(Vec3f v1, Vec3f v2);
 // Vec4f vec4cross(Vec4f v1, Vec4f v2);
+
+/********************************/
+/*       LIGHT SOURCE           */
+/********************************/
+typedef struct {
+    Vec3f direction;
+} Light;
+/**/
 /********************************/
 /*              DEBUG           */
 /********************************/
 void printVec(Vec3f v);
+
+
 
 #endif // GEOMETRY_H
