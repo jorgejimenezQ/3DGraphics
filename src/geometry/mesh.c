@@ -63,6 +63,7 @@ void trashLine(FILE *file) {
     while((ch = fgetc(file)) != '\n');
 }
 
+//f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3 ...
 int loadObjFile(char* filepath) {
     FILE *file;
     char ch;
@@ -72,7 +73,7 @@ int loadObjFile(char* filepath) {
         perror("Error opening the file");
         return 1;
     }
-    int hashCount = 0;
+
     while((ch = fgetc(file)) != EOF) {
         if (ch == '\n') continue;
         char ch2 =  fgetc(file);
@@ -82,15 +83,31 @@ int loadObjFile(char* filepath) {
         // if (hashCount == 3) break;
 
         if (ch == 'f') {
+            //f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3 ...
             int a = 0;
             int b = 0;
             int c = 0;
-            fscanf(file, "%d/%*d/%*d %d/%*d/%*d %d/%*d/%*d", &a, &b, &c);
+            // Textures
+            int ta = 0;
+            int tb = 0;
+            int tc = 0;
+            // Normals
+            int na = 0;
+            int nb = 0;
+            int nc = 0;
+
+            fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d", &a, &ta, &na, &b, &tb, &nb, &c, &tc, &nc);
             trashLine(file);
             Face face = {
                 .a = a,
                 .b = b,
-                .c = c
+                .c = c,
+                .ta = ta,
+                .tb = tb,
+                .tc = tc,
+                .na = na,
+                .nb = nb,
+                .nc = nc
             };
             array_push(mesh.faces, face);
 
@@ -124,8 +141,17 @@ int loadObjFile(char* filepath) {
             array_push(mesh.normals, vertex);
             // TODO: parse vn
         } else if (ch == 'v' && ch2 == 't') {
-            //TODO: parse vt
+            float x = 0.0;
+            float y = 0.0;
+
+            fscanf(file, " %f %f", &x, &y);
             trashLine(file);
+            Vec2f vertex = {
+                .x = x,
+                .y = y
+            };
+
+            array_push(mesh.textures, vertex);
         }   
     }
     fclose(file);

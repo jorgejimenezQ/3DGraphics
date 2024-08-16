@@ -7,6 +7,7 @@
 #include "./utils/utils.h"
 #include "./geometry/matrix.h"
 #include "./geometry/transformations.h"
+#include "./texture/texture.h"
 
 /************************************************************************ */
 // Array of triangles to render on the screen
@@ -28,8 +29,9 @@ Vec3f camPosition = { 0, 0, 0};
 // array of three random colors
 uint32_t BACKGROUND_COLOR = 0XFF555555;
 uint32_t FOREGROUND_COLOR = 0XFFFFFFFF;
-uint32_t OUTLINE_COLOR = 0XFF00d000;
+uint32_t OUTLINE_COLOR = 0XFFFF0000;
 uint32_t RED = 0XFFFF0000;
+uint32_t GREEN = 0XFF00FF00;
 // Render mode
 char renderMode = '4';
 bool hasBackFaceCulling = true;
@@ -75,7 +77,10 @@ void setup(void) {
             WINDOW_H
     );
 
-    loadObjFile("assets/f22.obj");
+    // Get the hardcoded values for the texture
+    brickTexture = (uint32_t* )REDBRICK_TEXTURE;
+
+    loadObjFile("assets/cube.obj");
     // loadCubeMeshData();
 
 
@@ -107,7 +112,9 @@ void processInput(void) {
                 key == '1' || 
                 key == '2' || 
                 key == '3' || 
-                key == '4') {
+                key == '4' || 
+                key == 't' ||
+                key == 'T') {
                     renderMode = key;
             } 
 
@@ -156,21 +163,6 @@ void processTransformation() {
     if (mesh.rotation.x > 360 || mesh.rotation.x < -360) mesh.rotation.x = 0;
     if (mesh.rotation.y > 360 || mesh.rotation.y < -360) mesh.rotation.y = 0;
     if (mesh.rotation.z > 360 || mesh.rotation.z < -360) mesh.rotation.z = 0;
-}
-
-uint32_t applyLightIntensity(uint32_t color, float percentFactor) {
-    uint32_t maskA = 0XFF000000;
-    uint32_t maskR = 0X00FF0000;
-    uint32_t maskG = 0X0000FF00;
-    uint32_t maskB = 0X000000FF;
-
-
-    uint32_t a = (color & maskA);
-    uint32_t r = (color & maskR) * percentFactor;
-    uint32_t g = (color & maskG) * percentFactor;
-    uint32_t b = (color & maskB) * percentFactor;
-
-    return a | (r & maskR) | (g & maskG) | (b & maskB);
 }
 
 void update(void) {
@@ -269,9 +261,11 @@ void update(void) {
                     break;
                 }
 
-                float dotProd = -vec3dot(faceNormal, light.direction);
-                faceColor = applyLightIntensity(faceColor, fabs(dotProd));
-                projectedTriangle.color = faceColor;
+                if (renderMode == '3' || renderMode == '4') {
+                    float dotProd = -vec3dot(faceNormal, light.direction);
+                    faceColor = applyLightIntensity(faceColor, fabs(dotProd));
+                    projectedTriangle.color = faceColor;
+                }
             }
 
             /******************************************************/
@@ -290,29 +284,28 @@ void update(void) {
             projectedVertex.data[0] += (WINDOW_W/2);
             projectedVertex.data[1] += (WINDOW_H/2);
 
-
             // Save the projected triangle
             projectedTriangle.points[j].x = projectedVertex.data[0];
             projectedTriangle.points[j].y = projectedVertex.data[1];
+            projectedTriangle.points[j].z = projectedVertex.data[2];
+            projectedTriangle.points[j].w = projectedVertex.data[3];
 
-            // if (hasBackFaceCulling && j == 2) {
-            //     // projectedTriangle.color = currentFace.color != 0 ? currentFace.color : faceColor;
-            // }
         } // end of for loop - vertices
 
         if (isBackFace) {
             isBackFace = false;
             continue;
         }
-
-
         
         // Get the average of all the z's 
         zAvg = (transformedVertices[0].data[2] + transformedVertices[1].data[2] + transformedVertices[2].data[2]) / 3.0;
         projectedTriangle.avgDepth = zAvg;
 
         // our array of triangles
-        // trianglesToRender[i] = projectedTriangle;
+        projectedTriangle.uvTexture[0] = mesh.textures[currentFace.ta - 1];
+        projectedTriangle.uvTexture[1] = mesh.textures[currentFace.tb - 1];
+        projectedTriangle.uvTexture[2] = mesh.textures[currentFace.tc - 1];
+
         array_push(trianglesToRender, projectedTriangle);
         for (int k = 0;k < 3; k++) {
             matrixFree(transformedVertices[k]);
@@ -340,20 +333,28 @@ void render(void) {
     int numTriangles = array_length(trianglesToRender);
     for (int i = numTriangles - 1; i >= 0; i--) {
         Triangle triangle = trianglesToRender[i];
+        Vec2f tPoints[] = {
+            (Vec2f){triangle.points[0].x, triangle.points[0].y},
+            (Vec2f){triangle.points[1].x, triangle.points[1].y},
+            (Vec2f){triangle.points[2].x, triangle.points[2].y}
+        };
+        if (renderMode == '3' || renderMode == '4') {
+            drawTriangleFill(tPoints, triangle.color, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+        }
+        
+        if (renderMode == 't' || renderMode == 'T') {
+            drawTriangleBar(triangle.points, triangle.uvTexture, brickTexture, brickTextureHeight, brickTextureWidth, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+        }
+
+        if (renderMode == '1' || renderMode == '2' || renderMode == '4' || renderMode == 'T') {
+            drawTriangle(tPoints, OUTLINE_COLOR, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+        }
 
         if (renderMode == '1') {
-            drawTriangle(triangle.points, OUTLINE_COLOR, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
-            rect(triangle.points[0].x, triangle.points[0].y, 3, 3, RED);
-            rect(triangle.points[1].x, triangle.points[1].y, 3, 3, RED);
-            rect(triangle.points[2].x, triangle.points[2].y, 3, 3, RED);
-        } else if (renderMode == '2') {
-            drawTriangle(triangle.points, OUTLINE_COLOR, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
-        } else if (renderMode == '3') {
-            drawTriangleFill(triangle.points, triangle.color, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
-        } else if (renderMode == '4') {
-            drawTriangleFill(triangle.points, triangle.color, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
-            drawTriangle(triangle.points, OUTLINE_COLOR, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
-        } 
+            rect(triangle.points[0].x, triangle.points[0].y, 3, 3, GREEN);
+            rect(triangle.points[1].x, triangle.points[1].y, 3, 3, GREEN);
+            rect(triangle.points[2].x, triangle.points[2].y, 3, 3, GREEN);
+        }
     }
 
     // Visualize light direction
@@ -377,6 +378,8 @@ void freeResources() {
     // Dynamic array free 
     array_free(mesh.faces);
     array_free(mesh.vertices);
+    array_free(mesh.normals);
+    array_free(mesh.textures);
 }
 
 int main(void) {
@@ -413,6 +416,25 @@ int main(void) {
             printf("Render Mode: %c\n", renderMode);
             printf("Back Face Culling: %s\n", hasBackFaceCulling ? "ON" : "OFF");
             printf("Transformations: %c\n", transformations);
+            // Change color for the rendering modes and print the current mode
+            if (renderMode == '1') {
+                printf("\033[0;33m");
+                printf("Wireframe Mode with points\n");
+            } else if (renderMode == '2') {
+                printf("\033[0;34m");
+                printf("Wireframe Mode\n");
+            } else if (renderMode == '3') {
+                printf("\033[0;35m");
+                printf("Fill Mode\n");
+            } else if (renderMode == '4') {
+                printf("\033[0;36m");
+                printf("Fill Mode with Wireframe\n");
+            } else if (renderMode == 't' || renderMode == 'T') {
+                printf("\033[0;37m");
+                printf("Texture Mode\n");
+            }
+            // reset the color to default
+            printf("\033[0m");
         }
 
         frameTime = SDL_GetTicks() - frameStart;

@@ -6,8 +6,12 @@
 
 CC = clang
 
-CFLAGS = -Wall -Wextra -Werror -I/usr/include/SDL2
+CFLAGS = -Wall -Wextra -I/usr/include/SDL2
 
+# lsdl2 is the SDL2 library
+# lm is the math library
+# lassimp is the assimp library
+# LDFLAGS = -lSDL2 -lm -lassimp
 LDFLAGS = -lSDL2 -lm
 DEBUG_FLAGS = -g
 
@@ -20,11 +24,13 @@ ERRORS_DIR = ./src/errors
 DISPLAY_DIR = ./src/display
 DRAW_DIR = ./src/draw
 GEOMETRY_DIR = ./src/geometry
+TEXTURE_DIR = ./src/texture
 UTILS_DIR = ./src/utils
+
 
 # Source files are stored in the SRC variable 
 # The main.c file is stored in the src directory
-SRCS = $(wildcard $(SRC_DIR)/*.c) $(ERRORS_DIR)/errors.c $(wildcard $(DISPLAY_DIR)/*.c) $(wildcard $(DRAW_DIR)/*.c) $(wildcard $(GEOMETRY_DIR)/*.c) $(wildcard $(UTILS_DIR)/*.c)
+SRCS = $(wildcard $(SRC_DIR)/*.c) $(ERRORS_DIR)/errors.c $(wildcard $(DISPLAY_DIR)/*.c) $(wildcard $(DRAW_DIR)/*.c) $(wildcard $(GEOMETRY_DIR)/*.c) $(wildcard $(UTILS_DIR)/*.c) $(wildcard $(TEXTURE_DIR)/*.c)
 
 # Object files
 OBJS = $(SRCS:.c=.o)

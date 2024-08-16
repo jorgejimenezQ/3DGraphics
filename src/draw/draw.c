@@ -9,6 +9,11 @@ void swap(Vec2f* v1, Vec2f* v2) {
         *v1 = temp;
 }
 
+void swapVec4(Vec4f* v1, Vec4f* v2) {
+        Vec4f temp = *v2;
+        *v2 = *v1;
+        *v1 = temp;
+}
 int drawPixel(int x, int y, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY) {
 
     // Keep the pixel bounded by boundX and boundY parameters and greater than one 

@@ -18,12 +18,18 @@ typedef struct {
 /***************************/
 
 typedef struct {
+    // Indices of the vertices
     int a, b, c;
+    // Indices of the normals
+    int na, nb, nc;
+    // Indices of the textures
+    int ta, tb, tc;
     uint32_t color;
 } Face;
 
 typedef struct {
-    Vec2f points[3];
+    Vec4f points[3];
+    Vec2f uvTexture[3];
     uint32_t color;
     float avgDepth;
 } Triangle;
@@ -74,7 +80,14 @@ Vec3f vec3cross(Vec3f v1, Vec3f v2);
 typedef struct {
     Vec3f direction;
 } Light;
-/**/
+
+/********************************/
+/*        Barycentric           */
+/********************************/
+// Compute the barycentric coordinates (u, v, w) for
+// Point p with respect to triangle (a, b, c)
+int barycentric(Vec2f a, Vec2f b, Vec2f c, Vec2f p, Vec3f *uvw);
+
 /********************************/
 /*              DEBUG           */
 /********************************/

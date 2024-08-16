@@ -15,6 +15,7 @@ extern Face cubeFaces[N_CUBE_FACES];
 typedef struct {
     Vec3f* vertices;
     Vec3f* normals;
+    Vec2f* textures;
     Face* faces;
     Vec3f rotation;
     Vec3f scale;
