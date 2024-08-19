@@ -8,6 +8,7 @@
 #include "./geometry/matrix.h"
 #include "./geometry/transformations.h"
 #include "./texture/texture.h"
+#include "./utils/utils.h"
 
 /************************************************************************ */
 // Array of triangles to render on the screen
@@ -22,10 +23,9 @@ int actualFPS = 0;
 Uint32 frameStart;
 int frameTime;
 // Color buffer
-float fovFactor = 800;
 bool isRunning = false;
 int prevFrameTime;
-Vec3f camPosition = { 0, 0, 0};
+Vec3f camPosition = { 0, 0, 0 };
 // array of three random colors
 uint32_t BACKGROUND_COLOR = 0XFF555555;
 uint32_t FOREGROUND_COLOR = 0XFFFFFFFF;
@@ -80,9 +80,12 @@ void setup(void) {
     // Get the hardcoded values for the texture
     brickTexture = (uint32_t* )REDBRICK_TEXTURE;
 
-    loadObjFile("assets/cube.obj");
+    // loadObjFile("assets/cube.obj");
     // loadCubeMeshData();
-
+    if (loadObjFile("assets/Modular Village/Wall_Prop_Lamp.obj", &mesh) == -1) {
+        printf("Error loading the mesh file\n");
+        exit(1);
+    }
 
     // Initialize the perspective projection matrix
     float fov = M_PI/3.0;// 60.0 deg in rads
@@ -173,11 +176,11 @@ void update(void) {
     int numFaces = array_length(mesh.faces);
     bool isBackFace = false;
 
-    mesh.rotation.x += 0.01;
-    mesh.rotation.y += 0.01;
-    mesh.rotation.z += 0.01;
+    // mesh.rotation.x += 0.01;
+    // mesh.rotation.y += 0.01;
+    // mesh.rotation.z += 0.01;
 
-    mesh.translation.z = 5;
+    mesh.translation.z = 10;
 
     // mesh.scale.x += 0.002;
     // mesh.scale.y += 0.002;
@@ -207,9 +210,12 @@ void update(void) {
         float zAvg;
         Face currentFace = mesh.faces[i];
         Vec3f faceVertices[3] = {
-            mesh.vertices[currentFace.a - 1], 
-            mesh.vertices[currentFace.b - 1], 
-            mesh.vertices[currentFace.c - 1] 
+            // mesh.vertices[currentFace.a - 1], 
+            // mesh.vertices[currentFace.b - 1], 
+            // mesh.vertices[currentFace.c - 1] 
+            currentFace.points[0],
+            currentFace.points[1],
+            currentFace.points[2]
         };
 
         Triangle projectedTriangle;
@@ -217,7 +223,7 @@ void update(void) {
         Matrix transformedVertices[3];
         // The current vertex as a column vertex
         Matrix currentVertex = matrixCreate(4, 1);
-        uint32_t faceColor = currentFace.color ? currentFace.color : FOREGROUND_COLOR ;
+        uint32_t faceColor = FOREGROUND_COLOR ;
         for (int j = 0; j < 3; j++) {
             Matrix transformedVertex;
 
@@ -249,14 +255,17 @@ void update(void) {
                 
                 Vec3f v1 = vec3sub(vec3Vertices[1], vec3Vertices[0]);
                 Vec3f v2 = vec3sub(vec3Vertices[2], vec3Vertices[0]);
+                vec3normalizeRef(&v1);
+                vec3normalizeRef(&v2);
+
                 Vec3f faceNormal = vec3cross(v1, v2);
                 vec3normalizeRef(&faceNormal);
 
                 // Calculate the vector from the camera position to the first vertex of the triangle
                 Vec3f camRay = vec3sub(camPosition, vec3Vertices[0]);
-
+                float dotProd = vec3dot(faceNormal, camRay);
                 // Check if the face is facing away from the camera
-                if (hasBackFaceCulling && vec3dot(faceNormal, camRay) < 0) {
+                if (hasBackFaceCulling && dotProd <= 0) {
                     isBackFace = true;
                     break;
                 }
@@ -302,9 +311,12 @@ void update(void) {
         projectedTriangle.avgDepth = zAvg;
 
         // our array of triangles
-        projectedTriangle.uvTexture[0] = mesh.textures[currentFace.ta - 1];
-        projectedTriangle.uvTexture[1] = mesh.textures[currentFace.tb - 1];
-        projectedTriangle.uvTexture[2] = mesh.textures[currentFace.tc - 1];
+        // projectedTriangle.uvTexture[0] = mesh.textures[currentFace.ta - 1];
+        // projectedTriangle.uvTexture[1] = mesh.textures[currentFace.tb - 1];
+        // projectedTriangle.uvTexture[2] = mesh.textures[currentFace.tc - 1];
+        projectedTriangle.uvTexture[0] = currentFace.uvTexture[0];
+        projectedTriangle.uvTexture[1] = currentFace.uvTexture[1];
+        projectedTriangle.uvTexture[2] = currentFace.uvTexture[2];
 
         array_push(trianglesToRender, projectedTriangle);
         for (int k = 0;k < 3; k++) {
@@ -358,9 +370,8 @@ void render(void) {
     }
 
     // Visualize light direction
-
-    Vec2f lightDir = { WINDOW_W/2 + light.direction.x * 50, 10 + light.direction.y * 50};   
-    renderLine((Vec2f){WINDOW_W/2, 10}, lightDir, RED);
+    Vec2f lightDir = {WINDOW_W/2 + light.direction.x * 50, WINDOW_H/2 + light.direction.y * 50};
+    renderLine((Vec2f){WINDOW_W/2, WINDOW_H/2}, lightDir, RED);
 
 
     array_free(trianglesToRender);
@@ -377,13 +388,10 @@ void freeResources() {
     matrixFree(perspectiveMatrix);
     // Dynamic array free 
     array_free(mesh.faces);
-    array_free(mesh.vertices);
-    array_free(mesh.normals);
-    array_free(mesh.textures);
 }
 
-int main(void) {
-    isRunning = initWindow(500, 600);
+void game(void) {
+ isRunning = initWindow(500, 600);
 
     setup();
 
@@ -403,38 +411,38 @@ int main(void) {
             actualFPS = frameCount;
             frameCount = 0;
             startTime = currentTime;
-            // Clear the terminal screen before printing the actual FPS
-            system("clear");
-            // Color red if under 24 FPS
-            // else color green
-            if (actualFPS < 24) printf("\033[0;31m");
-            else printf("\033[0;32m");
+            // // Clear the terminal screen before printing the actual FPS
+            // system("clear");
+            // // Color red if under 24 FPS
+            // // else color green
+            // if (actualFPS < 24) printf("\033[0;31m");
+            // else printf("\033[0;32m");
 
-            printf("Actual FPS: %d\n", actualFPS);
-            // reset the color to default
-            printf("\033[0m");
-            printf("Render Mode: %c\n", renderMode);
-            printf("Back Face Culling: %s\n", hasBackFaceCulling ? "ON" : "OFF");
-            printf("Transformations: %c\n", transformations);
-            // Change color for the rendering modes and print the current mode
-            if (renderMode == '1') {
-                printf("\033[0;33m");
-                printf("Wireframe Mode with points\n");
-            } else if (renderMode == '2') {
-                printf("\033[0;34m");
-                printf("Wireframe Mode\n");
-            } else if (renderMode == '3') {
-                printf("\033[0;35m");
-                printf("Fill Mode\n");
-            } else if (renderMode == '4') {
-                printf("\033[0;36m");
-                printf("Fill Mode with Wireframe\n");
-            } else if (renderMode == 't' || renderMode == 'T') {
-                printf("\033[0;37m");
-                printf("Texture Mode\n");
-            }
-            // reset the color to default
-            printf("\033[0m");
+            // printf("Actual FPS: %d\n", actualFPS);
+            // // reset the color to default
+            // printf("\033[0m");
+            // printf("Render Mode: %c\n", renderMode);
+            // printf("Back Face Culling: %s\n", hasBackFaceCulling ? "ON" : "OFF");
+            // printf("Transformations: %c\n", transformations);
+            // // Change color for the rendering modes and print the current mode
+            // if (renderMode == '1') {
+            //     printf("\033[0;33m");
+            //     printf("Wireframe Mode with points\n");
+            // } else if (renderMode == '2') {
+            //     printf("\033[0;34m");
+            //     printf("Wireframe Mode\n");
+            // } else if (renderMode == '3') {
+            //     printf("\033[0;35m");
+            //     printf("Fill Mode\n");
+            // } else if (renderMode == '4') {
+            //     printf("\033[0;36m");
+            //     printf("Fill Mode with Wireframe\n");
+            // } else if (renderMode == 't' || renderMode == 'T') {
+            //     printf("\033[0;37m");
+            //     printf("Texture Mode\n");
+            // }
+            // // reset the color to default
+            // printf("\033[0m");
         }
 
         frameTime = SDL_GetTicks() - frameStart;
@@ -446,6 +454,10 @@ int main(void) {
 
     freeResources();
     destroyWindow();
+}
 
+int main(void) {
+    game();
+    // assimpLoadObj("assets/diablo.obj", &mesh);
     return 0;
 }

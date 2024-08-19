@@ -11,8 +11,8 @@ CFLAGS = -Wall -Wextra -I/usr/include/SDL2
 # lsdl2 is the SDL2 library
 # lm is the math library
 # lassimp is the assimp library
-# LDFLAGS = -lSDL2 -lm -lassimp
-LDFLAGS = -lSDL2 -lm
+LDFLAGS = -lSDL2 -lm -lassimp
+# LDFLAGS = -lSDL2 -lm
 DEBUG_FLAGS = -g
 
 #  TARGET is used to store the name of the executable

@@ -4,6 +4,7 @@
 // Include any necessary libraries or headers
 #include "../geometry/geometry.h"
 #include "../array.h"
+#include "../geometry/mesh.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -19,8 +20,16 @@ void merge(Triangle *triangles, Triangle *aux, int lo, int mid, int hi);
 void assert(int condition, const char *message);
 
 /****************************/
+/*        ASSET LOADER      */
+/****************************/
+int loadObjFile(char* filepath, Mesh* mesh);
+
+
+/****************************/
 /*        CLIENT EXAMPLES   */
 /****************************/
 void mergeExample(int n);
+
+
 
 #endif // UTILS_H

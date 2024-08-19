@@ -18,13 +18,16 @@ typedef struct {
 /***************************/
 
 typedef struct {
-    // Indices of the vertices
-    int a, b, c;
-    // Indices of the normals
-    int na, nb, nc;
-    // Indices of the textures
-    int ta, tb, tc;
-    uint32_t color;
+    // // Indices of the vertices
+    // int a, b, c;
+    // // Indices of the normals
+    // int na, nb, nc;
+    // // Indices of the textures
+    // int ta, tb, tc;
+    // uint32_t color;
+    Vec3f points[3];
+    Vec3f normals[3];
+    Vec2f uvTexture[3];
 } Face;
 
 typedef struct {
