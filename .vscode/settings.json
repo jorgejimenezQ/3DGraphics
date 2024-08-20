@@ -1,7 +1,8 @@
 {
     "files.associations": {
         "sdl.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "upng.h": "c"
     },
     "cSpell.words": ["zfar", "znear"]
 }

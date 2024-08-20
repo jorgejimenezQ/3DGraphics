@@ -26,12 +26,15 @@ int frameTime;
 bool isRunning = false;
 int prevFrameTime;
 Vec3f camPosition = { 0, 0, 0 };
+
+
 // array of three random colors
 uint32_t BACKGROUND_COLOR = 0XFF555555;
 uint32_t FOREGROUND_COLOR = 0XFFFFFFFF;
 uint32_t OUTLINE_COLOR = 0XFFFF0000;
 uint32_t RED = 0XFFFF0000;
 uint32_t GREEN = 0XFF00FF00;
+
 // Render mode
 char renderMode = '4';
 bool hasBackFaceCulling = true;
@@ -78,12 +81,19 @@ void setup(void) {
     );
 
     // Get the hardcoded values for the texture
-    brickTexture = (uint32_t* )REDBRICK_TEXTURE;
+    // brickTexture = (uint32_t* )REDBRICK_TEXTURE;
+    // 0xEEAE00
 
     // loadObjFile("assets/cube.obj");
     // loadCubeMeshData();
-    if (loadObjFile("assets/Modular Village/Wall_Prop_Lamp.obj", &mesh) == -1) {
+    if (loadObjFile("assets/cube.obj", &mesh) == -1) {
         printf("Error loading the mesh file\n");
+        exit(1);
+    }
+
+
+    if (loadTextureFile("assets/cube.png", &meshTextureWidth, &meshTextureHeight) == -1) {
+        printf("Error loading the png file\n");
         exit(1);
     }
 
@@ -355,7 +365,7 @@ void render(void) {
         }
         
         if (renderMode == 't' || renderMode == 'T') {
-            drawTriangleBar(triangle.points, triangle.uvTexture, brickTexture, brickTextureHeight, brickTextureWidth, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+            drawTriangleBar(triangle.points, triangle.uvTexture, mesh_texture, meshTextureHeight, meshTextureWidth, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
         }
 
         if (renderMode == '1' || renderMode == '2' || renderMode == '4' || renderMode == 'T') {
@@ -384,6 +394,7 @@ void render(void) {
     SDL_RenderPresent(renderer);
 }
 void freeResources() {
+    free(mesh_texture);
     free(colorBuffer);
     matrixFree(perspectiveMatrix);
     // Dynamic array free 

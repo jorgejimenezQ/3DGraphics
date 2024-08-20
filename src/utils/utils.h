@@ -7,6 +7,7 @@
 #include "../geometry/mesh.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 // Declare any global constants or macros
 
@@ -23,7 +24,6 @@ void assert(int condition, const char *message);
 /*        ASSET LOADER      */
 /****************************/
 int loadObjFile(char* filepath, Mesh* mesh);
-
 
 /****************************/
 /*        CLIENT EXAMPLES   */

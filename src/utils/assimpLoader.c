@@ -80,6 +80,28 @@ int loadObjFile(char* filepath, Mesh* mesh) {
         }
     }
 
+    printf("Number of materials: %u\n", scene->mNumMaterials);
+    for (unsigned k = 0; k < scene->mNumMaterials; k++) {
+        const struct aiMaterial* material = scene->mMaterials[k];
+        // Check for diffuse texture
+        if (aiGetMaterialTextureCount(material, aiTextureType_DIFFUSE) > 0) {
+            printf("  Has diffuse texture.\n");
+
+            struct aiString path;
+            if (AI_SUCCESS == aiGetMaterialTexture(material, aiTextureType_DIFFUSE, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL)) {
+                printf("  Diffuse texture path: %s\n", path.data);
+            }
+        } else {
+            printf("  No diffuse texture.\n");
+        }
+
+        // Get and print diffuse color
+        struct aiColor4D color;
+        if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_DIFFUSE, &color)) {
+            printf("  Diffuse color: (%f, %f, %f, %f)\n", color.r, color.g, color.b, color.a);
+        }
+    }
+
     aiReleaseImport(scene); // Don't forget to release the scene!
     return 1;
 }
