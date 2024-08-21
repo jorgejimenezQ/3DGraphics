@@ -10,80 +10,52 @@ int drawTriangle(Vec2f* points, uint32_t color, uint32_t* buffer, int bufferWidt
     return 1;
 }
 
-void drawTopTriangle(Vec2f v1, Vec2f v2, Vec2f m, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY){
-    if (v2.x > m.x) {
-        swap(&v2, &m);
-    }   
+int drawTriangleFill(Vec4f* points, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY) { // Sort the vertices
+    Vec4f v1 = points[0];
+    Vec4f v2 = points[1];
+    Vec4f v3 = points[2];
 
-    float dx = v1.x - v2.x;
-    float dy = v1.y - v2.y;
-    float mdx = v1.x - m.x;
-    float mdy = v1.y - m.y;
+    if (v1.y > v2.y) {
+        swapVec4(&v1, &v2);
+    }
+    if (v1.y > v3.y) {
+        swapVec4(&v1, &v3);
+    }
+    if (v2.y > v3.y) {
+        swapVec4(&v2, &v3);
+    }
 
-    if (dy == 0) return;
+    int xStart = v1.x;
+    int xEnd = v1.x;
+    if (v2.x < xStart) xStart = v2.x;
+    if (v3.x < xStart) xStart = v3.x;
+    if (v1.x < xStart) xStart = v1.x;
 
-    for (int y = v1.y; y <= v2.y; y++) {
-        int startX = v1.x - (dx*v1.y - dx*y)/dy;
-        int endX = v1.x - (mdx*v1.y - mdx*y)/mdy;
-        for (int x = startX; x <= endX; x++) {
+    if (v2.x > xEnd) xEnd = v2.x;
+    if (v3.x > xEnd) xEnd = v3.x;
+    if (v1.x > xEnd) xEnd = v1.x;
+
+    Vec3f uvw;
+    for (int y = v1.y; y <= v3.y; y++) {
+        for (int x = xStart; x <= xEnd; x++) {
+            Vec2f p = {x, y};
+            if (!barycentric((Vec2f){v1.x, v1.y}, (Vec2f){v2.x, v2.y}, (Vec2f){v3.x, v3.y}, p, &uvw)) continue;
+            if (uvw.x < 0 || uvw.y < 0 || uvw.z < 0) continue;
+            if (uvw.x > 1 || uvw.y > 1 || uvw.z > 1) continue;
+            if (v1.w == 0 || v2.w == 0 || v3.w == 0) continue;
+            
+            float w = (1/v1.w)*uvw.x + (1/v2.w)*uvw.y + (1/v3.w)*uvw.z;
+            if (w == 0) continue;
+
+            // Adjust 1/w so the pixels that are closer to the camera have smaller values
+            w = 1.0 - w;
+
+            // Only draw the pixel if the depth value is less than the one previously stored in the z-buffer
+            if (w > zBuffer[(bufferWidth*y) + x]) continue;
             drawPixel(x, y, color, buffer, bufferWidth, boundX, boundY);
+            // Upadate the zBuffer 
+            zBuffer[(bufferWidth * y) + x] = w;
         }
     }
-}
-
-void drawBottomTriangle(Vec2f v1, Vec2f v2, Vec2f m, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY){
-    if (v2.x > m.x) swap(&v2, &m);
-
-    float dx  = v1.x - v2.x;
-    float dy  = v1.y - v2.y;
-    float mdx = v1.x - m.x;
-    float mdy = v1.y - m.y;
-
-    if (dy == 0) return;
-
-    for (int y = v1.y; y >= v2.y; y--) {
-        int startX = v1.x - (dx*v1.y - dx*y)/dy;
-        int endX = v1.x - (mdx*v1.y - mdx*y)/mdy;
-        for (int x = startX; x <= endX; x++) {
-            drawPixel(x, y, color, buffer, bufferWidth, boundX, boundY);
-        }
-    }
-}
-
-
-int drawTriangleFill(Vec2f* points, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY) {
-    // Sort the vertices
-    Vec2f v1 = points[0];
-    Vec2f v2 = points[1];
-    Vec2f v3 = points[2];
-
-    if (v1.y > v2.y) swap(&v1, &v2);
-    if (v1.y > v3.y) swap(&v1, &v3);
-    if (v2.y > v3.y) swap(&v2, &v3);
-
-    if (v1.y == v2.y) {
-        drawBottomTriangle(v3, v1, v2, color, buffer, bufferWidth, boundX, boundY);
-        return 1;
-    }
-
-    if (v2.y == v3.y) {
-        drawTopTriangle(v1, v2, v3, color, buffer, bufferWidth, boundX, boundY);
-        return 1;
-    }
-
-    // midpoint between v1 and v3 line
-    Vec2f midpoint;
-
-    // We know y
-    midpoint.y = v2.y;
-    float dx = v3.x - v1.x;
-    float dy = v3.y - v1.y;
-
-    if (dy == 0) return -1;
-    midpoint.x = v1.x - (dx*v1.y - dx*v2.y)/dy;
-
-    drawTopTriangle(v1, v2, midpoint, color, buffer, bufferWidth, boundX, boundY);
-    drawBottomTriangle(v3, v2, midpoint, color, buffer, bufferWidth, boundX, boundY);
-
     return 1;
 }

@@ -51,10 +51,18 @@ int drawTriangleBar(Vec4f* points, Vec2f* uvTexture, uint32_t* texture, int text
             u /= w;
             v /= w;
 
+            // Adjust 1/w so the pixels that are closer to the camera have smaller values
+            w = 1.0 - w;
+
+            // Only draw the pixel if the depth value is less than the one previously stored in the z-buffer
+            if (w > zBuffer[(bufferWidth*y) + x]) continue;
+
             int textureX = abs((int)(u * textureW));
             int textureY = (int)(v * textureH);
             color = texture[textureY*textureW + textureX];
             drawPixel(x, y, color, buffer, bufferWidth, boundX, boundY);
+            // Upadate the zBuffer 
+            zBuffer[(bufferWidth * y) + x] = w;
         }
     }
     return 1;

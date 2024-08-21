@@ -23,6 +23,7 @@ extern SDL_Renderer* renderer;
 extern SDL_Texture* colorBufferTexture;
 extern uint32_t resetColor; 
 extern uint32_t* colorBuffer; // Buffer to store the color of each pixel in the window
+extern float* zBuffer;
 extern int WINDOW_W; // Window dimensions
 extern int WINDOW_H;
 extern bool fullScreen;
@@ -32,5 +33,7 @@ bool initFullscreenWindow(void);
 void destroyWindow(void);
 void renderColorBuffer(void);
 void clearColorBuffer(uint32_t color);
+void clearZBuffer(void);
+
 
 #endif // DISPLAY_H

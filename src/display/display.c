@@ -6,6 +6,7 @@ SDL_Texture* colorBufferTexture = NULL;
 // Buffer to store the color of each pixel in the window
 uint32_t resetColor = 0XFF000000;
 uint32_t* colorBuffer = NULL;
+float* zBuffer = NULL;
 
 // Window dimensions
 int WINDOW_W;
@@ -77,6 +78,12 @@ void destroyWindow(void) {
     SDL_DestroyWindow(window);
     SDL_Quit();
     printf("Window destroyed.\n");
+}
+
+void clearZBuffer(void) {
+    for (int i = 0; i < WINDOW_W * WINDOW_H; i++) {
+        zBuffer[i] = 1.0;
+    }
 }
 
 void clearColorBuffer(uint32_t color) {

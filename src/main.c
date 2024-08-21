@@ -13,7 +13,9 @@
 /************************************************************************ */
 // Array of triangles to render on the screen
 /************************************************************************ */
-Triangle* trianglesToRender = NULL;
+#define MAX_TRIANGLES_PER_MESH 10000
+Triangle trianglesToRender[MAX_TRIANGLES_PER_MESH];
+int numTrianglesToRender = 0;
 
 // Light
 Light light;
@@ -31,7 +33,7 @@ Vec3f camPosition = { 0, 0, 0 };
 // array of three random colors
 uint32_t BACKGROUND_COLOR = 0X555555FF;
 uint32_t FOREGROUND_COLOR = 0XFFFFFFFF;
-uint32_t OUTLINE_COLOR = 0XFF0000FF;
+uint32_t OUTLINE_COLOR = 0X000000FF;
 uint32_t RED = 0XFF0000FF;
 uint32_t GREEN = 0XFFFFFFFF;
 
@@ -65,6 +67,12 @@ void setup(void) {
         exit(1);
     }
 
+    zBuffer = (float*)malloc(sizeof(float) * WINDOW_W * WINDOW_H);
+    if (!zBuffer) {
+        fprintf(stderr, "Error allocating memory for z buffer.\n");
+        exit(1);
+    }
+
     // Light
     light.direction = vec3normalize((Vec3f){0, 0, 1});
 
@@ -86,13 +94,13 @@ void setup(void) {
 
     // loadObjFile("assets/cube.obj");
     // loadCubeMeshData();
-    if (loadObjFile("assets/new assets/crab.obj", &mesh) == -1) {
+    if (loadObjFile("assets/car-coupe-blue.obj", &mesh) == -1) {
         printf("Error loading the mesh file\n");
         exit(1);
     }
 
 
-    if (loadTextureFile("assets/new assets/crab.png", &meshTextureWidth, &meshTextureHeight) == -1) {
+    if (loadTextureFile("assets/new assets/drone.png", &meshTextureWidth, &meshTextureHeight) == -1) {
         printf("Error loading the png file\n");
         exit(1);
     }
@@ -179,8 +187,6 @@ void processTransformation() {
 }
 
 void update(void) {
-    trianglesToRender = NULL;
-
     processTransformation();
 
     int numFaces = array_length(mesh.faces);
@@ -190,7 +196,7 @@ void update(void) {
     // mesh.rotation.y += 0.01;
     // mesh.rotation.z += 0.01;
 
-    mesh.translation.z = 6;
+    mesh.translation.z = 4;
 
     // mesh.scale.x += 0.002;
     // mesh.scale.y += 0.002;
@@ -215,8 +221,11 @@ void update(void) {
     worldMatrix = matrixMult(scaleMatrix, worldMatrix);
     worldMatrix = matrixMult(translationMatrix, worldMatrix);
 
+    numTrianglesToRender = 0;
+
     // Get all the faces
-    for (int i = 0; i < numFaces; i++) {
+    for (int i = 0; i < numFaces && numTrianglesToRender < MAX_TRIANGLES_PER_MESH; i++) {
+        // if (numTrianglesToRender > MAX_TRIANGLES_PER_MESH) break;
         float zAvg;
         Face currentFace = mesh.faces[i];
         Vec3f faceVertices[3] = {
@@ -318,23 +327,19 @@ void update(void) {
         projectedTriangle.avgDepth = zAvg;
 
         // our array of triangles
-        // projectedTriangle.uvTexture[0] = mesh.textures[currentFace.ta - 1];
-        // projectedTriangle.uvTexture[1] = mesh.textures[currentFace.tb - 1];
-        // projectedTriangle.uvTexture[2] = mesh.textures[currentFace.tc - 1];
+     
         projectedTriangle.uvTexture[0] = currentFace.uvTexture[0];
         projectedTriangle.uvTexture[1] = currentFace.uvTexture[1];
         projectedTriangle.uvTexture[2] = currentFace.uvTexture[2];
 
-        array_push(trianglesToRender, projectedTriangle);
+        trianglesToRender[numTrianglesToRender] = projectedTriangle;
+        numTrianglesToRender++;
         for (int k = 0;k < 3; k++) {
             matrixFree(transformedVertices[k]);
         }
         matrixFree(currentVertex);
 
     } // end of for loop - faces
-
-    // Sort the triangles by their average depth
-    sort(trianglesToRender);
 
     // Free the matrices
     matrixFree(scaleMatrix);
@@ -349,8 +354,8 @@ void renderLine(Vec2f v1, Vec2f v2, uint32_t color) {
 }
 
 void render(void) {
-    int numTriangles = array_length(trianglesToRender);
-    for (int i = numTriangles - 1; i >= 0; i--) {
+    // for (int i = numTrianglesToRender - 1; i >= 0; i--) {
+    for (int i = 0; i < numTrianglesToRender; i++) {
         Triangle triangle = trianglesToRender[i];
         Vec2f tPoints[] = {
             (Vec2f){triangle.points[0].x, triangle.points[0].y},
@@ -358,7 +363,7 @@ void render(void) {
             (Vec2f){triangle.points[2].x, triangle.points[2].y}
         };
         if (renderMode == '3' || renderMode == '4') {
-            drawTriangleFill(tPoints, triangle.color, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+            drawTriangleFill(triangle.points, triangle.color, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
         }
         
         if (renderMode == 't' || renderMode == 'T') {
@@ -376,30 +381,24 @@ void render(void) {
         }
     }
 
-    // Visualize light direction
-    Vec2f lightDir = {WINDOW_W/2 + light.direction.x * 50, WINDOW_H/2 + light.direction.y * 50};
-    renderLine((Vec2f){WINDOW_W/2, WINDOW_H/2}, lightDir, RED);
-
-
-    array_free(trianglesToRender);
     // Update the texture with new color buffer
     renderColorBuffer(); // Render the color buffer to the screen
-
     // 0X00000000
     clearColorBuffer(BACKGROUND_COLOR);
-
+    clearZBuffer();
     SDL_RenderPresent(renderer);
 }
 void freeResources() {
     textureFree();
     free(colorBuffer);
+    free(zBuffer);
     matrixFree(perspectiveMatrix);
     // Dynamic array free 
     array_free(mesh.faces);
 }
 
 void game(void) {
- isRunning = initWindow(500, 600);
+ isRunning = initWindow(800, 700);
 
     setup();
 
