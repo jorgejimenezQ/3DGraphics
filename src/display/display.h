@@ -9,7 +9,7 @@
 /*               GLOBAL VARIABLES            */
 /*********************************************/
 
-#define FPS 24
+#define FPS 15
 #define FRAME_TARGET_TIME (1000 / FPS)
 
 typedef struct options {

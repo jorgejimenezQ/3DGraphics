@@ -33,5 +33,4 @@ void matrixPrint(Matrix m);
 void matrixFree(Matrix m);
 void matrixExample(void);
 
-
 #endif // MATRIX_H

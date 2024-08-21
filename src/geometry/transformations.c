@@ -119,3 +119,18 @@ void projectionDivide(Matrix *m, Matrix *projection, Matrix *view) {
     m->data[1] /= m->data[3];
     m->data[2] /= m->data[3];
 }
+
+// | x.x  x.y  x.z  -x.x*eye.x - x.y*eye.y - x.z*eye.z |
+// | y.x  y.y  y.z  -y.x*eye.x - y.y*eye.y - y.z*eye.z |
+// | z.x  z.y  z.z  -z.x*eye.x - z.y*eye.y - z.z*eye.z |
+// | 0    0    0    1                                  |
+void createLookAt(Vec3f eye, Vec3f target, Vec3f up, Matrix *m) {
+    Vec3f z = vec3normalize(vec3sub(target, eye));
+    Vec3f x = vec3normalize(vec3cross(up, z));
+    Vec3f y = vec3cross(z, x);
+
+    m->data[0]  = x.x,   m->data[1]  = x.y,    m->data[2]   = x.z,   m->data[3]   = -vec3dot(x, eye);
+    m->data[4]  = y.x,   m->data[5]  = y.y,    m->data[6]   = y.z,   m->data[7]   = -vec3dot(y, eye);
+    m->data[8]  = z.x,   m->data[9]  = z.y,    m->data[10]  = z.z,   m->data[11]  = -vec3dot(z, eye);
+    m->data[12] = 0,     m->data[13] = 0,      m->data[14]  = 0,      m->data[15] = 1;
+}

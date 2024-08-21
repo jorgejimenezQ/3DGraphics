@@ -9,6 +9,8 @@
 #include "./geometry/transformations.h"
 #include "./texture/texture.h"
 #include "./utils/utils.h"
+#include "./camera/camera.h"
+#include "./input/input.h"
 
 /************************************************************************ */
 // Array of triangles to render on the screen
@@ -27,182 +29,48 @@ int frameTime;
 // Color buffer
 bool isRunning = false;
 int prevFrameTime;
-Vec3f camPosition = { 0, 0, 0 };
 
 
 // array of three random colors
 uint32_t BACKGROUND_COLOR = 0X555555FF;
 uint32_t FOREGROUND_COLOR = 0XFFFFFFFF;
-uint32_t OUTLINE_COLOR = 0X000000FF;
+uint32_t OUTLINE_COLOR = 0XFFFFFFFF;
 uint32_t RED = 0XFF0000FF;
 uint32_t GREEN = 0XFFFFFFFF;
 
 // Render mode
-char renderMode = '3';
+enum RenderMode renderMode = TEXTURE;
 bool hasBackFaceCulling = true;
 char transformations = '.';
 Matrix perspectiveMatrix;
 
-void rect(int x, int y, int w, int h, uint32_t color) {
-    fillRect(
-            x, 
-            y,
-            w,
-            h,
-            color,
-            colorBuffer,
-            WINDOW_W,
-            WINDOW_W -1,
-            WINDOW_H - 1
-    );
+// 
+float dt = 0.0;
 
+void rect(int x, int y, int w, int h, uint32_t color);
+void setup(void);
+void processInput(void);
+void update(float deltaTime);
+void render(void);
+void game(void);
+void processTransformation(void);
+void freeResources(void);
+void moveCamera(enum MovementDirection key);
+
+int main(void) {
+    game();
+    // assimpLoadObj("assets/diablo.obj", &mesh);
+    return 0;
 }
 
-void setup(void) {
-    // (uint32_t*) is a type cast to convert the pointer to a uint32_t pointer
-    // malloc is a function that allocates memory in the heap
-    colorBuffer = (uint32_t*)malloc(sizeof(uint32_t) * WINDOW_W * WINDOW_H);
-    if (!colorBuffer) {
-        fprintf(stderr, "Error allocating memory for color buffer.\n");
-        exit(1);
-    }
-
-    zBuffer = (float*)malloc(sizeof(float) * WINDOW_W * WINDOW_H);
-    if (!zBuffer) {
-        fprintf(stderr, "Error allocating memory for z buffer.\n");
-        exit(1);
-    }
-
-    // Light
-    light.direction = vec3normalize((Vec3f){0, 0, 1});
-
-    // Create a SDL texture
-    // SDL_PIXELFORMAT_ARGB8888 is a 32-bit pixel format, with alpha, red, green, and blue channels
-    // check https://wiki.libsdl.org/SDL_CreateTexture for more information
-    // SDL_TEXTUREACCESS_STREAMING means that the texture will be updated frequently
-    colorBufferTexture = SDL_CreateTexture(
-            renderer,
-            SDL_PIXELFORMAT_RGBA8888,
-            SDL_TEXTUREACCESS_STREAMING,
-            WINDOW_W,
-            WINDOW_H
-    );
-
-    // Get the hardcoded values for the texture
-    // brickTexture = (uint32_t* )REDBRICK_TEXTURE;
-    // 0xEEAE00
-
-    // loadObjFile("assets/cube.obj");
-    // loadCubeMeshData();
-    if (loadObjFile("assets/car-coupe-blue.obj", &mesh) == -1) {
-        printf("Error loading the mesh file\n");
-        exit(1);
-    }
-
-
-    if (loadTextureFile("assets/new assets/drone.png", &meshTextureWidth, &meshTextureHeight) == -1) {
-        printf("Error loading the png file\n");
-        exit(1);
-    }
-
-    // Initialize the perspective projection matrix
-    float fov = M_PI/3.0;// 60.0 deg in rads
-    float aspect = (float)WINDOW_H/(float)WINDOW_W;
-    float znear = 0.1;
-    float zfar = 100.0;
-    createPerspectiveMatrix(&perspectiveMatrix, fov, aspect, znear, zfar);
-}
-
-void processInput(void) {
-    SDL_Event event;
-    SDL_PollEvent(&event);
-    
-    switch(event.type) {
-        case SDL_QUIT: {
-            isRunning = false;
-            break;
-        }
-        case SDL_KEYDOWN: {
-            SDL_KeyCode key = event.key.keysym.sym;
-            if (key == SDLK_ESCAPE) {
-                isRunning = false;
-            }
-
-            // Render type
-            if (key == '0' || 
-                key == '1' || 
-                key == '2' || 
-                key == '3' || 
-                key == '4' || 
-                key == 't' ||
-                key == 'T') {
-                    renderMode = key;
-            } 
-
-            // Back Face Culling
-            if (key == 'c' || key == 'd') hasBackFaceCulling = key == 'c';
-
-            // Transformations
-            if (key == 'j' || 
-                key == 'k' || 
-                key == 'h' || 
-                key == 'l' || 
-                key == 'z' ||
-                key == 'Z' ||
-                key == 'r' ||
-                key == '.') { 
-
-                    transformations = key;
-            } 
-        }
-        default: {
-            break;
-        }
-    }
-}
-
-void processTransformation() {
-    if (transformations == 'j') mesh.rotation.x -= 0.05;
-    if (transformations == 'k') mesh.rotation.x += 0.05;
-    if (transformations == 'h') mesh.rotation.y -= 0.05;
-    if (transformations == 'l') mesh.rotation.y += 0.05;
-    if (transformations == 'z') mesh.rotation.z += 0.05;
-    if (transformations == 'Z') mesh.rotation.z -= 0.05;
-    
-    if (transformations == 'r') {
-        mesh.rotation.x = 0;
-        mesh.rotation.y = 0;
-        mesh.rotation.z = 0;
-    }
-
-    if (transformations == '.') {
-        mesh.rotation.x += 0;
-        mesh.rotation.y += 0;
-    }
-
-    // Keep the rotation within 360 degrees
-    if (mesh.rotation.x > 360 || mesh.rotation.x < -360) mesh.rotation.x = 0;
-    if (mesh.rotation.y > 360 || mesh.rotation.y < -360) mesh.rotation.y = 0;
-    if (mesh.rotation.z > 360 || mesh.rotation.z < -360) mesh.rotation.z = 0;
-}
-
-void update(void) {
-    processTransformation();
+void update(float deltaTime) {
 
     int numFaces = array_length(mesh.faces);
     bool isBackFace = false;
 
-    // mesh.rotation.x += 0.01;
-    // mesh.rotation.y += 0.01;
-    // mesh.rotation.z += 0.01;
-
+    /***************TRANSFORMATIONS MATRICES**************/
     mesh.translation.z = 4;
 
-    // mesh.scale.x += 0.002;
-    // mesh.scale.y += 0.002;
-    // mesh.scale.z += 0.002;
-
-    // Scale matrix
     Matrix scaleMatrix;
     Matrix translationMatrix;
     Matrix xRotationMatrix;
@@ -214,6 +82,7 @@ void update(void) {
     createRotationMatrix(&yRotationMatrix, mesh.rotation.y, 'y');
     createRotationMatrix(&zRotationMatrix, mesh.rotation.z, 'z');
     
+    /***************WORLD MATRICES**************/
     Matrix worldMatrix = matrixIdentity(4, 4);
     worldMatrix = matrixMult(xRotationMatrix, worldMatrix);
     worldMatrix = matrixMult(yRotationMatrix, worldMatrix);
@@ -221,8 +90,30 @@ void update(void) {
     worldMatrix = matrixMult(scaleMatrix, worldMatrix);
     worldMatrix = matrixMult(translationMatrix, worldMatrix);
 
-    numTrianglesToRender = 0;
+    /**********VIEW MATRIX************/
+    Matrix viewMatrix = matrixCreate(4, 4);
+    // TODO: Handle the camera movement. the target and the up vector
+    Matrix temp = matrixCreateWithData(4, 1, (float[]){0, 0, 1, 1});
+    Matrix yawRotation;
+    createRotationMatrix(&yawRotation, camera.yaw, 'y');
+    temp = matrixMult(yawRotation, temp);  
 
+    camera.direction.x = temp.data[0];
+    camera.direction.y = temp.data[1];
+    camera.direction.z = temp.data[2];
+
+    Vec3f target = vec3add(camera.position, camera.direction);
+
+    createLookAt(camera.position, 
+                target,
+                (Vec3f){0, 1, 0}, 
+                &viewMatrix
+    );
+
+    matrixFree(temp);
+    matrixFree(yawRotation);
+
+    numTrianglesToRender = 0;
     // Get all the faces
     for (int i = 0; i < numFaces && numTrianglesToRender < MAX_TRIANGLES_PER_MESH; i++) {
         // if (numTrianglesToRender > MAX_TRIANGLES_PER_MESH) break;
@@ -252,7 +143,9 @@ void update(void) {
 
             // Rotate Matrix
             transformedVertex = matrixMult(worldMatrix, currentVertex);
-
+            // Apply the view matrix
+            transformedVertex = matrixMult(viewMatrix, transformedVertex);
+            
             // Save the transformed vertex in the array of transformed vertices
             transformedVertices[j] = matrixCopy(transformedVertex);
             matrixFree(transformedVertex);
@@ -278,7 +171,8 @@ void update(void) {
                 vec3normalizeRef(&faceNormal);
 
                 // Calculate the vector from the camera position to the first vertex of the triangle
-                Vec3f camRay = vec3sub(camPosition, vec3Vertices[0]);
+                Vec3f origin = {0, 0, 0};
+                Vec3f camRay = vec3sub(origin, vec3Vertices[0]);
                 float dotProd = vec3dot(faceNormal, camRay);
                 // Check if the face is facing away from the camera
                 if (hasBackFaceCulling && dotProd <= 0) {
@@ -347,73 +241,33 @@ void update(void) {
     matrixFree(xRotationMatrix);
     matrixFree(yRotationMatrix);
     matrixFree(zRotationMatrix);
-}
-
-void renderLine(Vec2f v1, Vec2f v2, uint32_t color) {
-    drawLine(v1, v2, color, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
-}
-
-void render(void) {
-    // for (int i = numTrianglesToRender - 1; i >= 0; i--) {
-    for (int i = 0; i < numTrianglesToRender; i++) {
-        Triangle triangle = trianglesToRender[i];
-        Vec2f tPoints[] = {
-            (Vec2f){triangle.points[0].x, triangle.points[0].y},
-            (Vec2f){triangle.points[1].x, triangle.points[1].y},
-            (Vec2f){triangle.points[2].x, triangle.points[2].y}
-        };
-        if (renderMode == '3' || renderMode == '4') {
-            drawTriangleFill(triangle.points, triangle.color, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
-        }
-        
-        if (renderMode == 't' || renderMode == 'T') {
-            drawTriangleBar(triangle.points, triangle.uvTexture, mesh_texture, meshTextureHeight, meshTextureWidth, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
-        }
-
-        if (renderMode == '1' || renderMode == '2' || renderMode == '4' || renderMode == 'T') {
-            drawTriangle(tPoints, OUTLINE_COLOR, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
-        }
-
-        if (renderMode == '1') {
-            rect(triangle.points[0].x, triangle.points[0].y, 3, 3, GREEN);
-            rect(triangle.points[1].x, triangle.points[1].y, 3, 3, GREEN);
-            rect(triangle.points[2].x, triangle.points[2].y, 3, 3, GREEN);
-        }
-    }
-
-    // Update the texture with new color buffer
-    renderColorBuffer(); // Render the color buffer to the screen
-    // 0X00000000
-    clearColorBuffer(BACKGROUND_COLOR);
-    clearZBuffer();
-    SDL_RenderPresent(renderer);
-}
-void freeResources() {
-    textureFree();
-    free(colorBuffer);
-    free(zBuffer);
-    matrixFree(perspectiveMatrix);
-    // Dynamic array free 
-    array_free(mesh.faces);
+    matrixFree(viewMatrix);
 }
 
 void game(void) {
- isRunning = initWindow(800, 700);
+    isRunning = initWindow(800, 700);
 
     setup();
 
     Uint32 startTime = SDL_GetTicks();
     int frameCount = 0;
+    Uint32 previousTime = startTime;
+    Uint32 deltaTime = 0; 
 
     while(isRunning) {
         frameStart = SDL_GetTicks();
 
         processInput();
-        update();
+        // Update the game state with the time difference in seconds
+        dt = deltaTime / 1000.0;
+        update(dt);
         render();
 
         frameCount++;
         Uint32 currentTime = SDL_GetTicks();
+        deltaTime = currentTime - previousTime;
+        previousTime = currentTime;
+
         if (currentTime - startTime >= 1000) {
             actualFPS = frameCount;
             frameCount = 0;
@@ -458,13 +312,192 @@ void game(void) {
         }
     }
 
-
     freeResources();
     destroyWindow();
 }
 
-int main(void) {
-    game();
-    // assimpLoadObj("assets/diablo.obj", &mesh);
-    return 0;
+void rect(int x, int y, int w, int h, uint32_t color) {
+    fillRect(
+            x, 
+            y,
+            w,
+            h,
+            color,
+            colorBuffer,
+            WINDOW_W,
+            WINDOW_W -1,
+            WINDOW_H - 1
+    );
+
+}
+
+void setup(void) {
+    // (uint32_t*) is a type cast to convert the pointer to a uint32_t pointer
+    // malloc is a function that allocates memory in the heap
+    colorBuffer = (uint32_t*)malloc(sizeof(uint32_t) * WINDOW_W * WINDOW_H);
+    if (!colorBuffer) {
+        fprintf(stderr, "Error allocating memory for color buffer.\n");
+        exit(1);
+    }
+
+    zBuffer = (float*)malloc(sizeof(float) * WINDOW_W * WINDOW_H);
+    if (!zBuffer) {
+        fprintf(stderr, "Error allocating memory for z buffer.\n");
+        exit(1);
+    }
+
+    // Light
+    light.direction = vec3normalize((Vec3f){0, 0, 1});
+
+    // Create a SDL texture
+    // SDL_PIXELFORMAT_ARGB8888 is a 32-bit pixel format, with alpha, red, green, and blue channels
+    // check https://wiki.libsdl.org/SDL_CreateTexture for more information
+    // SDL_TEXTUREACCESS_STREAMING means that the texture will be updated frequently
+    colorBufferTexture = SDL_CreateTexture(
+            renderer,
+            SDL_PIXELFORMAT_RGBA8888,
+            SDL_TEXTUREACCESS_STREAMING,
+            WINDOW_W,
+            WINDOW_H
+    );
+
+    // Get the hardcoded values for the texture
+    // brickTexture = (uint32_t* )REDBRICK_TEXTURE;
+    // 0xEEAE00
+
+    // loadObjFile("assets/cube.obj");
+    // loadCubeMeshData();
+    if (loadObjFile("assets/new assets/f117.obj", &mesh) == -1) {
+        printf("Error loading the mesh file\n");
+        exit(1);
+    }
+
+
+    if (loadTextureFile("assets/new assets/f117.png", &meshTextureWidth, &meshTextureHeight) == -1) {
+        printf("Error loading the png file\n");
+        exit(1);
+    }
+
+    // Initialize the perspective projection matrix
+    float fov = M_PI/3.0;// 60.0 deg in rads
+    float aspect = (float)WINDOW_H/(float)WINDOW_W;
+    float znear = 0.1;
+    float zfar = 100.0;
+    createPerspectiveMatrix(&perspectiveMatrix, fov, aspect, znear, zfar);
+}
+
+void processInput(void) {
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+    
+        switch(event.type) {
+            case SDL_QUIT: {
+                isRunning = false;
+                break;
+            }
+            case SDL_KEYDOWN: {
+                SDL_KeyCode key = event.key.keysym.sym;
+                if (key == SDLK_ESCAPE) {
+                    isRunning = false;
+                }
+
+                if (isRenderOption(key)) {
+                    renderMode = (enum RenderMode)key;
+                }
+
+                if (key == BACK_FACE_CULLING || key == BACK_FACE_CULLING_DISABLED) {
+                    hasBackFaceCulling = (key == BACK_FACE_CULLING) ? true : false;
+                }
+
+                if (isMovementDirection(key)) {
+                    moveCamera((enum MovementDirection)key);
+                }
+            }
+            default: {
+                break;
+            }
+        }
+
+    }
+}
+
+
+
+void renderLine(Vec2f v1, Vec2f v2, uint32_t color) {
+    drawLine(v1, v2, color, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+}
+
+void render(void) {
+    // for (int i = numTrianglesToRender - 1; i >= 0; i--) {
+    for (int i = 0; i < numTrianglesToRender; i++) {
+        Triangle triangle = trianglesToRender[i];
+        Vec2f tPoints[] = {
+            (Vec2f){triangle.points[0].x, triangle.points[0].y},
+            (Vec2f){triangle.points[1].x, triangle.points[1].y},
+            (Vec2f){triangle.points[2].x, triangle.points[2].y}
+        };
+        if (renderMode == FILL || renderMode == FILLED_OUTLINE) {
+            drawTriangleFill(triangle.points, triangle.color, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+        }
+        
+        if (renderMode == TEXTURE || renderMode == TEXTURE_OUTLINE) {
+            drawTriangleBar(triangle.points, triangle.uvTexture, mesh_texture, meshTextureHeight, meshTextureWidth, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+        }
+
+        if (renderMode == OUTLINE || renderMode == FILLED_OUTLINE || renderMode == TEXTURE_OUTLINE || renderMode == POINTS_OUTLINE) {
+            drawTriangle(tPoints, OUTLINE_COLOR, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+        }
+
+        if (renderMode == POINTS || renderMode == POINTS_OUTLINE) {
+            rect(triangle.points[0].x, triangle.points[0].y, 3, 3, GREEN);
+            rect(triangle.points[1].x, triangle.points[1].y, 3, 3, GREEN);
+            rect(triangle.points[2].x, triangle.points[2].y, 3, 3, GREEN);
+        }
+    }
+
+    // Update the texture with new color buffer
+    renderColorBuffer(); // Render the color buffer to the screen
+    // 0X00000000
+    clearColorBuffer(BACKGROUND_COLOR);
+    clearZBuffer();
+    SDL_RenderPresent(renderer);
+}
+void freeResources() {
+    textureFree();
+    free(colorBuffer);
+    free(zBuffer);
+    matrixFree(perspectiveMatrix);
+    // Dynamic array free 
+    array_free(mesh.faces);
+}
+
+void moveCamera(enum MovementDirection key) {
+    switch(key) {
+        case UP: {
+            camera.position.y += 5 * dt;
+            break;
+        }
+        case DOWN: {
+            camera.position.y -= 5 * dt;
+            break;
+        }
+        case LEFT: {
+            camera.yaw += 5.0 * dt;
+            break;
+        }
+        case RIGHT: {
+            camera.yaw -= 5.0 * dt;
+            break;
+        }
+        case FORWARD: {
+            camera.forwardVelocity = vec3mult(camera.direction, 10 * dt);
+            camera.position = vec3add(camera.position, camera.forwardVelocity);
+            break;
+        }
+        case BACKWARD: {
+            camera.forwardVelocity = vec3mult(camera.direction, 10 * dt);
+            camera.position = vec3sub(camera.position, camera.forwardVelocity);
+            break;
+        }
+    }
 }

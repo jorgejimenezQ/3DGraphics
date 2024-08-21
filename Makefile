@@ -26,11 +26,17 @@ DRAW_DIR = ./src/draw
 GEOMETRY_DIR = ./src/geometry
 TEXTURE_DIR = ./src/texture
 UTILS_DIR = ./src/utils
+CAMERA_DIR = ./src/camera
+INPUT_DIR = ./src/input
 
+# Add all the directories to an array
+DIRS = $(SRC_DIR) $(ERRORS_DIR) $(DISPLAY_DIR) $(DRAW_DIR) $(GEOMETRY_DIR) $(UTILS_DIR) $(TEXTURE_DIR) $(CAMERA_DIR) $(INPUT_DIR)
 
 # Source files are stored in the SRC variable 
 # The main.c file is stored in the src directory
-SRCS = $(wildcard $(SRC_DIR)/*.c) $(ERRORS_DIR)/errors.c $(wildcard $(DISPLAY_DIR)/*.c) $(wildcard $(DRAW_DIR)/*.c) $(wildcard $(GEOMETRY_DIR)/*.c) $(wildcard $(UTILS_DIR)/*.c) $(wildcard $(TEXTURE_DIR)/*.c)
+# SRCS = $(wildcard $(SRC_DIR)/*.c) $(ERRORS_DIR)/errors.c $(wildcard $(DISPLAY_DIR)/*.c) $(wildcard $(DRAW_DIR)/*.c) $(wildcard $(GEOMETRY_DIR)/*.c) $(wildcard $(UTILS_DIR)/*.c) $(wildcard $(TEXTURE_DIR)/*.c)
+# For each directory in the DIRS array, get all the .c files and store them in the SRCS variable
+SRCS = $(foreach dir, $(DIRS), $(wildcard $(dir)/*.c))
 
 # Object files
 OBJS = $(SRCS:.c=.o)
