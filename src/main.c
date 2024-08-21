@@ -29,14 +29,14 @@ Vec3f camPosition = { 0, 0, 0 };
 
 
 // array of three random colors
-uint32_t BACKGROUND_COLOR = 0XFF555555;
+uint32_t BACKGROUND_COLOR = 0X555555FF;
 uint32_t FOREGROUND_COLOR = 0XFFFFFFFF;
-uint32_t OUTLINE_COLOR = 0XFFFF0000;
-uint32_t RED = 0XFFFF0000;
-uint32_t GREEN = 0XFF00FF00;
+uint32_t OUTLINE_COLOR = 0XFF0000FF;
+uint32_t RED = 0XFF0000FF;
+uint32_t GREEN = 0XFFFFFFFF;
 
 // Render mode
-char renderMode = '4';
+char renderMode = '3';
 bool hasBackFaceCulling = true;
 char transformations = '.';
 Matrix perspectiveMatrix;
@@ -74,7 +74,7 @@ void setup(void) {
     // SDL_TEXTUREACCESS_STREAMING means that the texture will be updated frequently
     colorBufferTexture = SDL_CreateTexture(
             renderer,
-            SDL_PIXELFORMAT_ARGB8888,
+            SDL_PIXELFORMAT_RGBA8888,
             SDL_TEXTUREACCESS_STREAMING,
             WINDOW_W,
             WINDOW_H
@@ -86,13 +86,13 @@ void setup(void) {
 
     // loadObjFile("assets/cube.obj");
     // loadCubeMeshData();
-    if (loadObjFile("assets/cube.obj", &mesh) == -1) {
+    if (loadObjFile("assets/new assets/crab.obj", &mesh) == -1) {
         printf("Error loading the mesh file\n");
         exit(1);
     }
 
 
-    if (loadTextureFile("assets/cube.png", &meshTextureWidth, &meshTextureHeight) == -1) {
+    if (loadTextureFile("assets/new assets/crab.png", &meshTextureWidth, &meshTextureHeight) == -1) {
         printf("Error loading the png file\n");
         exit(1);
     }
@@ -190,7 +190,7 @@ void update(void) {
     // mesh.rotation.y += 0.01;
     // mesh.rotation.z += 0.01;
 
-    mesh.translation.z = 10;
+    mesh.translation.z = 6;
 
     // mesh.scale.x += 0.002;
     // mesh.scale.y += 0.002;
@@ -220,9 +220,6 @@ void update(void) {
         float zAvg;
         Face currentFace = mesh.faces[i];
         Vec3f faceVertices[3] = {
-            // mesh.vertices[currentFace.a - 1], 
-            // mesh.vertices[currentFace.b - 1], 
-            // mesh.vertices[currentFace.c - 1] 
             currentFace.points[0],
             currentFace.points[1],
             currentFace.points[2]
@@ -394,7 +391,7 @@ void render(void) {
     SDL_RenderPresent(renderer);
 }
 void freeResources() {
-    free(mesh_texture);
+    textureFree();
     free(colorBuffer);
     matrixFree(perspectiveMatrix);
     // Dynamic array free 
@@ -422,38 +419,38 @@ void game(void) {
             actualFPS = frameCount;
             frameCount = 0;
             startTime = currentTime;
-            // // Clear the terminal screen before printing the actual FPS
-            // system("clear");
-            // // Color red if under 24 FPS
-            // // else color green
-            // if (actualFPS < 24) printf("\033[0;31m");
-            // else printf("\033[0;32m");
+            // Clear the terminal screen before printing the actual FPS
+            system("clear");
+            // Color red if under 24 FPS
+            // else color green
+            if (actualFPS < 24) printf("\033[0;31m");
+            else printf("\033[0;32m");
 
-            // printf("Actual FPS: %d\n", actualFPS);
-            // // reset the color to default
-            // printf("\033[0m");
-            // printf("Render Mode: %c\n", renderMode);
-            // printf("Back Face Culling: %s\n", hasBackFaceCulling ? "ON" : "OFF");
-            // printf("Transformations: %c\n", transformations);
-            // // Change color for the rendering modes and print the current mode
-            // if (renderMode == '1') {
-            //     printf("\033[0;33m");
-            //     printf("Wireframe Mode with points\n");
-            // } else if (renderMode == '2') {
-            //     printf("\033[0;34m");
-            //     printf("Wireframe Mode\n");
-            // } else if (renderMode == '3') {
-            //     printf("\033[0;35m");
-            //     printf("Fill Mode\n");
-            // } else if (renderMode == '4') {
-            //     printf("\033[0;36m");
-            //     printf("Fill Mode with Wireframe\n");
-            // } else if (renderMode == 't' || renderMode == 'T') {
-            //     printf("\033[0;37m");
-            //     printf("Texture Mode\n");
-            // }
-            // // reset the color to default
-            // printf("\033[0m");
+            printf("Actual FPS: %d\n", actualFPS);
+            // reset the color to default
+            printf("\033[0m");
+            printf("Render Mode: %c\n", renderMode);
+            printf("Back Face Culling: %s\n", hasBackFaceCulling ? "ON" : "OFF");
+            printf("Transformations: %c\n", transformations);
+            // Change color for the rendering modes and print the current mode
+            if (renderMode == '1') {
+                printf("\033[0;33m");
+                printf("Wireframe Mode with points\n");
+            } else if (renderMode == '2') {
+                printf("\033[0;34m");
+                printf("Wireframe Mode\n");
+            } else if (renderMode == '3') {
+                printf("\033[0;35m");
+                printf("Fill Mode\n");
+            } else if (renderMode == '4') {
+                printf("\033[0;36m");
+                printf("Fill Mode with Wireframe\n");
+            } else if (renderMode == 't' || renderMode == 'T') {
+                printf("\033[0;37m");
+                printf("Texture Mode\n");
+            }
+            // reset the color to default
+            printf("\033[0m");
         }
 
         frameTime = SDL_GetTicks() - frameStart;
