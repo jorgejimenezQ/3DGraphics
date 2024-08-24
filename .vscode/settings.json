@@ -16,7 +16,9 @@
         "unordered_map": "c",
         "unordered_set": "c",
         "vector": "c",
-        "draw.h": "c"
+        "draw.h": "c",
+        "matrix.h": "c",
+        "transformations.h": "c"
     },
     "cSpell.words": ["zfar", "znear"]
 }

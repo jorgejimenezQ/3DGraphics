@@ -1,0 +1,35 @@
+Model loaded: assets/new assets/cube.obj
+Number of meshes: 1
+Number of materials: 2
+Mesh 0: 36 vertices, 12 faces
+Number of materials: 2
+  No diffuse texture.
+  Diffuse color: (0.600000, 0.600000, 0.600000, 1.000000)
+  No diffuse texture.
+  Diffuse color: (0.600000, 0.600000, 0.600000, 1.000000)
+Window destroyed.
+Process:         renderer [33207]
+Path:            /Users/USER/*/renderer
+Load Address:    0x100bed000
+Identifier:      renderer
+Version:         0
+Code Type:       X86-64
+Platform:        macOS
+Parent Process:  leaks [33206]
+
+Date/Time:       2024-08-24 13:51:26.281 -0600
+Launch Time:     2024-08-24 13:51:16.318 -0600
+OS Version:      macOS 14.6.1 (23G93)
+Report Version:  7
+Analysis Tool:   /Applications/Xcode.app/Contents/Developer/usr/bin/leaks
+Analysis Tool Version:  Xcode 15.4 (15F31d)
+
+Physical footprint:         58.6M
+Physical footprint (peak):  59.4M
+Idle exit:                  untracked
+----
+
+leaks Report Version: 3.0
+Process 33207: 34697 nodes malloced for 6595 KB
+Process 33207: 0 leaks for 0 total leaked bytes.
+

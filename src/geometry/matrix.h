@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include "./geometry.h"
 
 // Define your class or struct
 typedef struct {
@@ -15,22 +16,23 @@ typedef struct {
 } Matrix;
 
 // Declare your class or struct
-Matrix matrixCreate(int rows, int cols);
+void matrixCreate(int rows, int cols, Matrix *m);
 // Put data in the matrix
-Matrix matrixCreateWithData(int rows, int cols, float *data);
-
+void matrixCreateWithData(int rows, int cols, float *data, Matrix *m);
 // Declare any function prototypes
-Matrix matrixAdd(Matrix m1, Matrix m2);
-Matrix matrixSub(Matrix m1, Matrix m2);
-Matrix matrixMult(Matrix m1, Matrix m2);
-Matrix matrixScalarMult(Matrix m, float k);
-Matrix matrixTranspose(Matrix m);
-Matrix matrixInverse(Matrix m);
+void matrixAdd(Matrix m1, Matrix m2, Matrix *out);
+void matrixSub(Matrix m1, Matrix m2, Matrix *out);
+void matrixMult(Matrix m1, Matrix m2, Matrix *out);
+void matrixScalarMult(Matrix m, float k, Matrix *out);
+void matrixTranspose(Matrix m, Matrix *out);
+void matrixInverse(Matrix m, Matrix *out);
+void matrixIdentity(int rows, int cols, Matrix *out);
+void matrixCopy(Matrix m, Matrix *out);
+
 // void matrixRow(Matrix *m, int row, float *data);
-Matrix matrixIdentity(int rows, int cols);
-Matrix matrixCopy(Matrix m);
 void matrixPrint(Matrix m);
 void matrixFree(Matrix m);
-void matrixExample(void);
+// void matrixExample(void);
 
+void matrixCreateFromV4(Vec4f v, Matrix *m);
 #endif // MATRIX_H

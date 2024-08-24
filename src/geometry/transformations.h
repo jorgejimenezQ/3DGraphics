@@ -5,6 +5,7 @@
 #include <math.h>
 #include "matrix.h"
 #include "geometry.h"
+#include "../clipping/clipping.h"
 
 // Declare any function prototypes
 void  createScaleMatrix(Matrix *m, float sx, float sy, float sz);
@@ -15,5 +16,12 @@ void createPerspectiveMatrix(Matrix *m, float fov, float aspect, float near, flo
 void projectionDivide(Matrix *m, Matrix *projection, Matrix *view);
 
 void createLookAt(Vec3f eye, Vec3f target, Vec3f up, Matrix *m);
+
+void transformFace(Face face, Matrix *worldMatrix, Matrix *viewMatrix, Matrix *out);
+bool isBackface(Matrix *face, Vec3f *normal);
+void projectTriangle(Matrix *transformedVertices, Matrix *perspectiveMatrix, int WINDOW_W, int WINDOW_H, Triangle *out);
+
+// triangles.c
+void polygonToTriangles(Polygon *polygon, Triangle *trianglesOut);
 
 #endif // FILENAME_H

@@ -4,7 +4,7 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 
-enum RenderMode {
+typedef enum {
     POINTS = '1',
     OUTLINE = '2',
     FILL = '3',
@@ -12,9 +12,10 @@ enum RenderMode {
     FILLED_OUTLINE = '5',
     TEXTURE_OUTLINE = '6',
     POINTS_OUTLINE = '7',
-};
+} RenderMode;
+
 // An array of all the render options
-static const enum RenderMode renderOptions[] = {
+static const RenderMode renderOptions[] = {
     POINTS,
     OUTLINE,
     FILL,
@@ -23,18 +24,20 @@ static const enum RenderMode renderOptions[] = {
     TEXTURE_OUTLINE,
     POINTS_OUTLINE,
 };
+
 static const int numRenderOptions = sizeof(renderOptions) / sizeof(renderOptions[0]);
 
-enum MovementDirection {
+typedef enum  {
     FORWARD = 'w',
     BACKWARD = 's',
     LEFT = 'a',
     RIGHT = 'd',
     UP = 'q',
     DOWN = 'e'
-};
+} MovementDirection;
+
 // An array of all the movement directions
-static const enum MovementDirection movementDirections[] = {
+static const MovementDirection movementDirections[] = {
     FORWARD,
     BACKWARD,
     LEFT,
@@ -45,10 +48,10 @@ static const enum MovementDirection movementDirections[] = {
 
 static const int numMovementDirections = sizeof(movementDirections) / sizeof(movementDirections[0]);
 
-enum CullingMode {
+typedef enum  {
     BACK_FACE_CULLING = '8',
     BACK_FACE_CULLING_DISABLED = '9'
-};
+} CullingMode;
 
 
 bool isRenderOption(SDL_KeyCode key);

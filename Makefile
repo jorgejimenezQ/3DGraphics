@@ -28,9 +28,10 @@ TEXTURE_DIR = ./src/texture
 UTILS_DIR = ./src/utils
 CAMERA_DIR = ./src/camera
 INPUT_DIR = ./src/input
+CLIPPING_DIR = ./src/clipping
 
 # Add all the directories to an array
-DIRS = $(SRC_DIR) $(ERRORS_DIR) $(DISPLAY_DIR) $(DRAW_DIR) $(GEOMETRY_DIR) $(UTILS_DIR) $(TEXTURE_DIR) $(CAMERA_DIR) $(INPUT_DIR)
+DIRS = $(SRC_DIR) $(ERRORS_DIR) $(DISPLAY_DIR) $(DRAW_DIR) $(GEOMETRY_DIR) $(UTILS_DIR) $(TEXTURE_DIR) $(CAMERA_DIR) $(INPUT_DIR) $(CLIPPING_DIR)
 
 # Source files are stored in the SRC variable 
 # The main.c file is stored in the src directory

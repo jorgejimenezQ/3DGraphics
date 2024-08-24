@@ -1,6 +1,5 @@
 #include "geometry.h"
-#include <math.h>
-#include <stdio.h>
+
 
 
 Vec3f rotateX(Vec3f v, float angle) {
@@ -232,6 +231,88 @@ float vec4dot(Vec4f a, Vec4f b) {
     return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;
 }
 
+/**************************************************************/
+/*                    VECTOR CREATE                           */
+/**************************************************************/
+Vec2f createVec2data(float *x) {
+    Vec2f result = {
+        .x = x[0],
+        .y = x[1]
+    };
+    return result;
+}
+
+Vec2f createVec2f(float x, float y) {
+    Vec2f result = {
+        .x = x,
+        .y = y
+    };
+    return result;
+}
+
+Vec3f createVec3data(float *x) {
+    Vec3f result = {
+        .x = x[0],
+        .y = x[1],
+        .z = x[2]
+    };
+    return result;
+}
+Vec3f createVec3f(float x, float y, float z) {
+    Vec3f result = {
+        .x = x,
+        .y = y,
+        .z = z
+    };
+    return result;
+}
+
+
+Vec4f createVec4data(float *x) {
+    Vec4f result = {
+        .x = x[0],
+        .y = x[1],
+        .z = x[2],
+        .w = x[3]
+    };
+    return result;
+}
+
+Vec4f createVec4f(float x, float y, float z, float w) {
+    Vec4f result = {
+        .x = x,
+        .y = y,
+        .z = z,
+        .w = w
+    };
+    return result;
+}
+
+
+Vec2f vec2clone(Vec2f v) {
+    Vec2f result = {
+        .x = v.x,
+        .y = v.y
+    };
+    return result;
+}
+Vec3f vec3clone(Vec3f v) {
+    Vec3f result = {
+        .x = v.x,
+        .y = v.y,
+        .z = v.z
+    };
+    return result;
+}
+Vec4f vec4clone(Vec4f v) {
+    Vec4f result = {
+        .x = v.x,
+        .y = v.y,
+        .z = v.z,
+        .w = v.w
+    };
+    return result;
+}
 /**************************************************************/
 /*                         DEBUG                              */
 /**************************************************************/

@@ -2,6 +2,8 @@
 #define GEOMETRY_H
 
 #include <stdint.h>
+#include <math.h>
+#include <stdio.h>
 
 typedef struct {
     float x, y;
@@ -76,6 +78,21 @@ float vec4dot(Vec4f v1, Vec4f v2);
 
 Vec3f vec3cross(Vec3f v1, Vec3f v2);
 // Vec4f vec4cross(Vec4f v1, Vec4f v2);
+/********************************/
+/*       Vector create          */
+/********************************/
+Vec2f createVec2data(float *x);
+Vec2f createVec2f(float x, float y);
+
+Vec3f createVec3data(float *x);
+Vec3f createVec3f(float x, float y, float z);
+
+Vec4f createVec4data(float *x);
+Vec4f createVec4f(float x, float y, float z, float w);
+
+Vec2f vec2clone(Vec2f v);
+Vec3f vec3clone(Vec3f v);
+Vec4f vec4clone(Vec4f v);
 
 /********************************/
 /*       LIGHT SOURCE           */

@@ -6,6 +6,13 @@
 #include "../display/display.h"
 #include "../geometry/geometry.h"
 
+typedef struct {
+    int bufferWidth;
+    uint32_t* buffer;
+    int boundX;
+    int boundY;
+} DrawingContext;
+
 // PIXELS & LINES
 int drawPixel(int x, int y, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY);
 int drawLine(Vec2f v1, Vec2f v2, uint32_t color, uint32_t *buffer, int bufferWith, int boundX, int boundY);
@@ -21,4 +28,5 @@ int rectangle(int x, int y, int width, int height, uint32_t color, uint32_t* buf
 // HELPERS
 void swap(Vec2f* v1, Vec2f* v2);
 void swapVec4(Vec4f* v1, Vec4f* v2);
+
 #endif // DRAW_H
