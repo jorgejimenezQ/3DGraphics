@@ -28,12 +28,17 @@ enum FrustumPlane {
 
 typedef struct {
     Vec3f vertices[MAX_NUM_POLY_VERTICES];
+    // uvTextures is an array of u, v coordinates
+    // [u0, v0, u1, v1, u2, v2, ...]
+    Vec2f uvTextures[MAX_NUM_POLY_VERTICES];
+    // Vec3f normals[MAX_NUM_POLY_VERTICES];
     int numVertices;
 } Polygon;
 
 
-void initializeFrustumPlanes(float fov, float znear, float zfar);
-Polygon createPolygonFromTriangle(Vec3f v0, Vec3f v1, Vec3f v2);
+void initializeFrustumPlanes(float fovX, float fovY, float znear, float zfar);
+Polygon createPolygonFromTriangle(Vec3f v0, Vec3f v1, Vec3f v2, Vec2f uv0, Vec2f uv1, Vec2f uv2);
 void clipPolygon(Polygon *polygon);
 void setDrawingContext_clipping(DrawingContext *dc);
+int polygonToTriangles(Polygon *polygon, Triangle *trianglesOut);
 #endif // CLIPPING_H

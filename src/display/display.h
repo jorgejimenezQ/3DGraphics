@@ -28,8 +28,8 @@ extern int WINDOW_W; // Window dimensions
 extern int WINDOW_H;
 extern bool fullScreen;
 
-bool initWindow(int windowWidth, int windowHeight);
-bool initFullscreenWindow(void);
+bool initWindow(int windowWidth, int windowHeight, bool fullScreen);
+bool initFullScreenWindow(void);
 void destroyWindow(void);
 void renderColorBuffer(void);
 void clearColorBuffer(uint32_t color);

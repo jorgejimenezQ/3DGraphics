@@ -22,6 +22,6 @@ bool isBackface(Matrix *face, Vec3f *normal);
 void projectTriangle(Matrix *transformedVertices, Matrix *perspectiveMatrix, int WINDOW_W, int WINDOW_H, Triangle *out);
 
 // triangles.c
-void polygonToTriangles(Polygon *polygon, Triangle *trianglesOut);
+int polygonToTriangles(Polygon *polygon, Triangle *trianglesOut);
 
 #endif // FILENAME_H

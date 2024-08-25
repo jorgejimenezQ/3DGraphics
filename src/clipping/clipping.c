@@ -3,23 +3,26 @@
 Plane frustumPlanes[6];
 DrawingContext drawingContext;
 
-void initializeFrustumPlanes(float fov, float znear, float zfar) {
-    float cosFov = cos(fov / 2);
-    float sinFov = sin(fov / 2);
+void initializeFrustumPlanes(float fovX, float fovY, float znear, float zfar) {
+    // 
+    float cosFovX = cos(fovX / 2);
+    float sinFovX = sin(fovX / 2);
+    float cosFovY = cos(fovY / 2);
+    float sinFovY = sin(fovY / 2);
 
     Vec3f origin = {0, 0, 0};
 
     frustumPlanes[LEFT_PLANE].point = origin;
-    frustumPlanes[LEFT_PLANE].normal = (Vec3f){cosFov, 0, sinFov};
+    frustumPlanes[LEFT_PLANE].normal = (Vec3f){cosFovX, 0, sinFovX};
     
     frustumPlanes[RIGHT_PLANE].point = origin;
-    frustumPlanes[RIGHT_PLANE].normal = (Vec3f){-cosFov, 0, sinFov};
+    frustumPlanes[RIGHT_PLANE].normal = (Vec3f){-cosFovX, 0, sinFovX};
 
     frustumPlanes[BOTTOM_PLANE].point = origin;
-    frustumPlanes[BOTTOM_PLANE].normal = (Vec3f){0, cosFov, sinFov};
+    frustumPlanes[BOTTOM_PLANE].normal = (Vec3f){0, cosFovY, sinFovY};
 
     frustumPlanes[TOP_PLANE].point = origin;
-    frustumPlanes[TOP_PLANE].normal = (Vec3f){0, -cosFov, sinFov};
+    frustumPlanes[TOP_PLANE].normal = (Vec3f){0, -cosFovY, sinFovY};
 
     frustumPlanes[NEAR_PLANE].point = (Vec3f){0, 0, znear};
     frustumPlanes[NEAR_PLANE].normal = (Vec3f){0, 0, 1};
@@ -30,11 +33,14 @@ void initializeFrustumPlanes(float fov, float znear, float zfar) {
 }
 
 
-Polygon createPolygonFromTriangle(Vec3f v0, Vec3f v1, Vec3f v2) {
+Polygon createPolygonFromTriangle(Vec3f v0, Vec3f v1, Vec3f v2, Vec2f uv0, Vec2f uv1, Vec2f uv2) {
     Polygon poly;
     poly.vertices[0] = v0;
     poly.vertices[1] = v1;
     poly.vertices[2] = v2;
+    poly.uvTextures[0] = uv0;
+    poly.uvTextures[1] = uv1;
+    poly.uvTextures[2] = uv2;
     poly.numVertices = 3;
     return poly;
 }
@@ -45,11 +51,15 @@ void clipPolygonAgainstPlane(Polygon *polygon, int plane) {
 
     // The array of inside vertices that will be part of the final polygon
     Vec3f insideVertices[MAX_NUM_POLY_VERTICES];
+    Vec2f insideUvTextures[MAX_NUM_POLY_VERTICES];
     int numInsideVertices = 0;
 
-    // Start current and previous vertex with the first and last polygon vertices
+    // Start current and previous vertex with the first and last polygon vertices and texture coordinates
     Vec3f *current = &polygon->vertices[0];
+    Vec2f *currentUvTexture = &polygon->uvTextures[0];
+
     Vec3f *previous = &polygon->vertices[polygon->numVertices - 1];
+    Vec2f *previousUvTexture = &polygon->uvTextures[polygon->numVertices - 1];
 
     float currentDot;
     float previousDot = vec3dot(vec3sub(*previous, planePoint), planeNormal);
@@ -66,6 +76,13 @@ void clipPolygonAgainstPlane(Polygon *polygon, int plane) {
             q2q1 = vec3mult(q2q1, t);
             Vec3f intersectionPoint = vec3add(*previous, q2q1);
 
+            // Calculate and add the new uv texture coordinates
+            Vec2f uv;
+            Vec2f uvSub = vec2sub(*currentUvTexture, *previousUvTexture);   
+            uvSub = vec2mult(uvSub, t);
+            uv = vec2add(*previousUvTexture, uvSub);
+            insideUvTextures[numInsideVertices] = uv;
+            
             // Insert the new intersection point in the list of "inside vertices"
             insideVertices[numInsideVertices] = vec3clone(intersectionPoint);
             numInsideVertices++;
@@ -73,17 +90,21 @@ void clipPolygonAgainstPlane(Polygon *polygon, int plane) {
 
         if (currentDot > 0) {
             insideVertices[numInsideVertices] = vec3clone(*current);
+            insideUvTextures[numInsideVertices] = vec2clone(*currentUvTexture);
             numInsideVertices++;
         }
         // Move to the next vertex
         previousDot = currentDot;
         previous = current;
+        previousUvTexture = currentUvTexture;
         current++;
+        currentUvTexture++;
     }
 
     // Copy all the vertices from the insideVertices into the destination polygon
     for (int i = 0; i < numInsideVertices; i++) {
         polygon->vertices[i] = vec3clone(insideVertices[i]);
+        polygon->uvTextures[i] = vec2clone(insideUvTextures[i]);
     }
     polygon->numVertices = numInsideVertices;
 }
@@ -102,4 +123,23 @@ void setDrawingContext_clipping(DrawingContext *dc) {
     drawingContext.boundY = dc->boundY;
     drawingContext.buffer = dc->buffer;
     drawingContext.bufferWidth = dc->bufferWidth;
+}
+
+
+int polygonToTriangles(Polygon *polygon, Triangle *trianglesOut) {
+    int tIdx = 0;
+    if (polygon->numVertices < 3) {
+        return 0;
+    }
+
+    for (int i = 2; i < polygon->numVertices; i++) {
+        trianglesOut[tIdx].points[0] =  (Vec4f){ polygon->vertices[0].x, polygon->vertices[0].y, polygon->vertices[0].z, 1};
+        trianglesOut[tIdx].points[1] =  (Vec4f){ polygon->vertices[i -1].x, polygon->vertices[i -1].y, polygon->vertices[i -1].z, 1};
+        trianglesOut[tIdx].points[2] =  (Vec4f){ polygon->vertices[i].x, polygon->vertices[i].y, polygon->vertices[i].z, 1};
+        trianglesOut[tIdx].uvTexture[0] = polygon->uvTextures[0];
+        trianglesOut[tIdx].uvTexture[1] = polygon->uvTextures[i - 1];
+        trianglesOut[tIdx].uvTexture[2] = polygon->uvTextures[i];
+        tIdx++;
+    }
+    return tIdx;
 }

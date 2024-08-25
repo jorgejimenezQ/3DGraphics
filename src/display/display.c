@@ -18,23 +18,42 @@ bool fullScreen = false;
 
 
 
-bool initFullscreenWindow() {
+bool initFullScreenWindow() {
     fullScreen = true;
 
     // Get the current display mode of the primary display
     SDL_DisplayMode displayMode;
-    SDL_GetCurrentDisplayMode(0, &displayMode);
-
-    initWindow(displayMode.w, displayMode.h);
-
+    int err = SDL_GetCurrentDisplayMode(0, &displayMode);
+    if (err < 0) {
+        // Print the error message
+        fprintf(stderr, "Error getting the display mode: %s\n", SDL_GetError());
+        exit(1);
+    }
+    // initWindow(displayMode.w, displayMode.h);
     return true;
 }
 
-bool initWindow(int windowWidth, int windowHeight) {
+bool initWindow(int windowWidth, int windowHeight, bool fullScreen) {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         fprintf(stderr, "Error initializing SDL.\n");
         return false;
     }
+
+    if (fullScreen) {
+        // return true;
+        // Get the current display mode of the primary display
+        SDL_DisplayMode displayMode;
+        int err = SDL_GetCurrentDisplayMode(0, &displayMode);
+        if (err < 0) {
+            // Print the error message
+            fprintf(stderr, "Error getting the display mode: %s\n", SDL_GetError());
+            exit(1);
+        }
+        fullScreen = true;
+        windowWidth = displayMode.w;
+        windowHeight = displayMode.h;
+    }
+
     WINDOW_W = windowWidth;
     WINDOW_H = windowHeight;
 
@@ -45,7 +64,7 @@ bool initWindow(int windowWidth, int windowHeight) {
             SDL_WINDOWPOS_CENTERED,
             windowWidth,
             windowHeight,
-            SDL_WINDOW_SHOWN       
+            SDL_WINDOW_BORDERLESS       
     );
 
     if (!window) {

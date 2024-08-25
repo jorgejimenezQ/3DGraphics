@@ -31,15 +31,15 @@ bool isRunning = false;
 int prevFrameTime;
 
 // array of three random colors
-uint32_t BACKGROUND_COLOR = 0X555555FF;
+uint32_t BACKGROUND_COLOR = 0X000000FF;
 uint32_t FOREGROUND_COLOR = 0XFFFFFFFF;
-uint32_t OUTLINE_COLOR = 0XFFFFFFFF;
+uint32_t OUTLINE_COLOR = 0XFF00FFFF;
 uint32_t RED = 0XFF0000FF;
-uint32_t GREEN = 0XFFFFFFFF;
+uint32_t GREEN = 0X00FF00FF;
 
 // Render mode
-RenderMode renderMode = OUTLINE;
-bool hasBackFaceCulling = true;
+RenderMode renderMode = POINTS_OUTLINE;
+bool hasBackFaceCulling = false;
 char transformations = '.';
 Matrix perspectiveMatrix;
 
@@ -126,7 +126,7 @@ void update(float deltaTime) {
     matrixCreate(4, 4, &viewMatrix);
     // TODO: Handle the camera movement. the target and the up vector
     Matrix temp;
-    matrixCreateWithData(4, 1, (float[]){0, 0, 1, 1}, &temp);
+    matrixCreateWithData(4, 1, (float[]){0, 0, 1, 0}, &temp);
     Matrix yawRotation;
     matrixCreate(4, 4, &yawRotation);
     createRotationMatrix(&yawRotation, camera.yaw, 'y');
@@ -153,7 +153,6 @@ void update(float deltaTime) {
 
         Polygon polygon; // the polygon to be clipped
         Face currentFace = mesh.faces[i]; // get the current face
-        Triangle projectedTriangle; // the projected triangle
         Matrix transformedVertices[3]; // the transformed vertices
         uint32_t faceColor = FOREGROUND_COLOR ; // the face color
 
@@ -165,13 +164,16 @@ void update(float deltaTime) {
         // Calculate the face normal
         // Check if the face is facing away from the camera
         Vec3f faceNormal; // We are saving the face normal for the lighting calculations
-        if (hasBackFaceCulling && isBackface(transformedVertices, &faceNormal)) 
-            break;
+        if (hasBackFaceCulling && isBackface(transformedVertices, &faceNormal)) {
+            for (int k = 0;k < 3; k++) {
+                matrixFree(transformedVertices[k]);
+            }
+            continue;
+        }
         
-        if (renderMode == FILL || renderMode == TEXTURE) {
+        if (renderMode == FILL || renderMode == TEXTURE || renderMode == FILLED_OUTLINE || renderMode == TEXTURE_OUTLINE) {
             float dotProd = -vec3dot(faceNormal, light.direction);
             faceColor = applyLightIntensity(faceColor, fabs(dotProd));
-            projectedTriangle.color = faceColor;
         }
 
         /*******************C L I P P I N G**********************************/
@@ -179,17 +181,24 @@ void update(float deltaTime) {
         Vec3f vertex0 = createVec3data(transformedVertices[0].data);
         Vec3f vertex1 = createVec3data(transformedVertices[1].data);
         Vec3f vertex2 = createVec3data(transformedVertices[2].data);
-        polygon = createPolygonFromTriangle(vertex0, vertex1, vertex2);
+        polygon = createPolygonFromTriangle(vertex0, vertex1, vertex2, 
+                currentFace.uvTexture[0], currentFace.uvTexture[1], currentFace.uvTexture[2]);
 
         // Clip the polygon
         clipPolygon(&polygon);
-        int numTriangles = polygon.numVertices - 2;
 
         // A column vector that will temporarily hold the vector column formed
         // by the vertices of the triangles
+        if (polygon.numVertices < 3) {
+            for (int k = 0;k < 3; k++) {
+                matrixFree(transformedVertices[k]);
+            }
+            continue;
+        }
+
         Matrix tempTriMatrix[3];
-        Triangle newTriangles[numTriangles];
-        polygonToTriangles(&polygon, newTriangles);
+        Triangle newTriangles[polygon.numVertices - 2];
+        int numTriangles = polygonToTriangles(&polygon, newTriangles);
 
         /******************************************************/
         // PROJECT EACH TRIANGLE RETURNED FROM THE CLIPPING
@@ -199,7 +208,10 @@ void update(float deltaTime) {
             matrixCreateFromV4(newTriangles[j].points[1], &tempTriMatrix[1]);
             matrixCreateFromV4(newTriangles[j].points[2], &tempTriMatrix[2]);
 
-            projectTriangle(tempTriMatrix, &perspectiveMatrix, WINDOW_W, WINDOW_H, &projectedTriangle);
+            // our array of triangles
+            projectTriangle(tempTriMatrix, &perspectiveMatrix, WINDOW_W, WINDOW_H, &newTriangles[j]);
+            newTriangles[j].color = faceColor;
+
             trianglesToRender[numTrianglesToRender] = newTriangles[j];
             numTrianglesToRender++;
 
@@ -207,14 +219,6 @@ void update(float deltaTime) {
             matrixFree(tempTriMatrix[0]);
             matrixFree(tempTriMatrix[1]);
             matrixFree(tempTriMatrix[2]);
-
-            // our array of triangles
-            projectedTriangle.uvTexture[0] = currentFace.uvTexture[0];
-            projectedTriangle.uvTexture[1] = currentFace.uvTexture[1];
-            projectedTriangle.uvTexture[2] = currentFace.uvTexture[2];
-
-            trianglesToRender[numTrianglesToRender] = projectedTriangle;
-            numTrianglesToRender++;
         }
 
         for (int k = 0;k < 3; k++) {
@@ -233,8 +237,8 @@ void update(float deltaTime) {
 }
 
 void game(void) {
-    isRunning = initWindow(800, 700);
-
+    // isRunning = initWindow(600, 700, false);
+    isRunning = initWindow(0, 0, true);
     setup();
 
     Uint32 startTime = SDL_GetTicks();
@@ -264,7 +268,7 @@ void game(void) {
             system("clear");
             // Color red if under 24 FPS
             // else color green
-            if (actualFPS < 24) printf("\033[0;31m");
+            if (actualFPS < FPS) printf("\033[0;31m");
             else printf("\033[0;32m");
 
             printf("Actual FPS: %d\n", actualFPS);
@@ -339,26 +343,28 @@ void setup(void) {
 
     // loadObjFile("assets/cube.obj");
     // loadCubeMeshData();
-    if (loadObjFile("assets/new assets/cube.obj", &mesh) == -1) {
+    if (loadObjFile("assets/new assets/crab.obj", &mesh) == -1) {
         printf("Error loading the mesh file\n");
         exit(1);
     }
 
 
-    if (loadTextureFile("assets/new assets/cube.png", &meshTextureWidth, &meshTextureHeight) == -1) {
+    if (loadTextureFile("assets/new assets/crab.png", &meshTextureWidth, &meshTextureHeight) == -1) {
         printf("Error loading the png file\n");
         exit(1);
     }
 
     // Initialize the perspective projection matrix
-    float fov = M_PI/3.0;// 60.0 deg in rads
-    float aspect = (float)WINDOW_H/(float)WINDOW_W;
-    float znear = 0.1;
-    float zfar = 500.0;
-    createPerspectiveMatrix(&perspectiveMatrix, fov, aspect, znear, zfar);
+    float aspectY = (float)WINDOW_H/(float)WINDOW_W;
+    float aspectX = (float)WINDOW_W/(float)WINDOW_H;
+    float fovY =  3.141592 / 3.0; // the same as 180/3, or 60deg
+    float fovX = atan(tan(fovY/2) * aspectX) * 2;
+    float znear = 1;
+    float zfar = 20.0;
+    createPerspectiveMatrix(&perspectiveMatrix, fovY, aspectY, znear, zfar);
 
     // Initialize the frustum
-    initializeFrustumPlanes(fov, znear, zfar);
+    initializeFrustumPlanes(fovX, fovY, znear, zfar);
 
     // Drawing context for the clipping tool (used for debugging)
     dc.boundX = WINDOW_W;
@@ -429,9 +435,9 @@ void render(void) {
         }
 
         if (renderMode == POINTS || renderMode == POINTS_OUTLINE) {
-            rect(triangle.points[0].x, triangle.points[0].y, 3, 3, GREEN);
-            rect(triangle.points[1].x, triangle.points[1].y, 3, 3, GREEN);
-            rect(triangle.points[2].x, triangle.points[2].y, 3, 3, GREEN);
+            rect(triangle.points[0].x, triangle.points[0].y, 5, 5, GREEN);
+            rect(triangle.points[1].x, triangle.points[1].y, 5, 5, GREEN);
+            rect(triangle.points[2].x, triangle.points[2].y, 5, 5, GREEN);
         }
     }
 
@@ -454,28 +460,28 @@ void freeResources() {
 void moveCamera(MovementDirection key) {
     switch(key) {
         case UP: {
-            camera.position.y += 5 * dt;
+            camera.position.y += 3 * dt;
             break;
         }
         case DOWN: {
-            camera.position.y -= 5 * dt;
+            camera.position.y -= 3 * dt;
             break;
         }
         case LEFT: {
-            camera.yaw += 2.0 * dt;
+            camera.yaw += 3.0 * dt;
             break;
         }
         case RIGHT: {
-            camera.yaw -= 2.0 * dt;
+            camera.yaw -= 3.0 * dt;
             break;
         }
         case FORWARD: {
-            camera.forwardVelocity = vec3mult(camera.direction, 5 * dt);
+            camera.forwardVelocity = vec3mult(camera.direction, 3 * dt);
             camera.position = vec3add(camera.position, camera.forwardVelocity);
             break;
         }
         case BACKWARD: {
-            camera.forwardVelocity = vec3mult(camera.direction, 5 * dt);
+            camera.forwardVelocity = vec3mult(camera.direction, 3 * dt);
             camera.position = vec3sub(camera.position, camera.forwardVelocity);
             break;
         }

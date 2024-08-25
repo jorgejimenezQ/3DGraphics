@@ -85,12 +85,18 @@ void  createRotationMatrix(Matrix *m, float angle, char axis) {
 // | 0    0          1          0        |
 void createPerspectiveMatrix(Matrix *m, float fov, float aspect, float near, float far) {
     matrixIdentity(4, 4, m);
-    float f = 1.0f / tan(fov / 2.0f);
-    m->data[0] = aspect * f;
-    m->data[5] = f;
+    // float f = 1.0f / tan(fov / 2.0f);
+    // | (h/w)*1/tan(fov/2)             0              0                 0 |
+    // |                  0  1/tan(fov/2)              0                 0 |
+    // |                  0             0     zf/(zf-zn)  (-zf*zn)/(zf-zn) |
+    // |                  0             0              1                 0 |
+    m->data[0] = aspect / tan(fov / 2.0);
+    m->data[5] = 1.0 / tan(fov / 2.0);
     m->data[10] = far / (far - near);
-    m->data[11] = -far * near / (far - near);
+    m->data[11] =  (-far * near)/(far - near);
     m->data[14] = 1.0f;
+    m->data[15] = 0;
+
     return;
 }
 

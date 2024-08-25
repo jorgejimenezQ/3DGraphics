@@ -1,0 +1,33 @@
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/array.c -o src/array.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/main.c -o src/main.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/errors/errors.c -o src/errors/errors.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/display/display.c -o src/display/display.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/draw/draw.c -o src/draw/draw.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/draw/rec.c -o src/draw/rec.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/draw/triangleBarycentric.c -o src/draw/triangleBarycentric.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/draw/triangles.c -o src/draw/triangles.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/geometry/barycentric.c -o src/geometry/barycentric.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/geometry/geometry.c -o src/geometry/geometry.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/geometry/matrix.c -o src/geometry/matrix.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/geometry/mesh.c -o src/geometry/mesh.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/geometry/transformations.c -o src/geometry/transformations.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/utils/assimpLoader.c -o src/utils/assimpLoader.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/utils/mergesort.c -o src/utils/mergesort.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/utils/upng.c -o src/utils/upng.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/texture/texture.c -o src/texture/texture.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/camera/camera.c -o src/camera/camera.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/input/input.c -o src/input/input.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/clipping/clipping.c -o src/clipping/clipping.o
+clang -Wall -Wextra -I/usr/include/SDL2 -c src/clipping/polygon.c -o src/clipping/polygon.o
+clang -Wall -Wextra -I/usr/include/SDL2 -o renderer src/array.o src/main.o src/errors/errors.o src/display/display.o src/draw/draw.o src/draw/rec.o src/draw/triangleBarycentric.o src/draw/triangles.o src/geometry/barycentric.o src/geometry/geometry.o src/geometry/matrix.o src/geometry/mesh.o src/geometry/transformations.o src/utils/assimpLoader.o src/utils/mergesort.o src/utils/upng.o src/texture/texture.o src/camera/camera.o src/input/input.o src/clipping/clipping.o src/clipping/polygon.o -lSDL2 -lm -lassimp
+./renderer
+Model loaded: assets/new assets/cube.obj
+Number of meshes: 1
+Number of materials: 2
+Mesh 0: 36 vertices, 12 faces
+Number of materials: 2
+  No diffuse texture.
+  Diffuse color: (0.600000, 0.600000, 0.600000, 1.000000)
+  No diffuse texture.
+  Diffuse color: (0.600000, 0.600000, 0.600000, 1.000000)
+Window destroyed.

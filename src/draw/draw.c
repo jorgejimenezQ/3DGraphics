@@ -17,8 +17,10 @@ void swapVec4(Vec4f* v1, Vec4f* v2) {
 int drawPixel(int x, int y, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY) {
 
     // Keep the pixel bounded by boundX and boundY parameters and greater than one 
-    if (0 >= x || x > (boundX -1)) return -1;
-    if (0 >= y || y > (boundY -1)) return -1;
+    // if (0 > x || x > (boundX - 1)) return -1;
+    // if (0 > y || y > (boundY - 1)) return -1;
+    if (x <= 0 || y <= 0) return -1;
+    if (x >= boundX || y >= boundY) return -1;
     // if (x <= 0 || y <= 0) return -1;
     // if (x > boundX || y > boundY) return -1;
 
