@@ -39,7 +39,7 @@ int loadObjFile(char* filepath, Mesh* mesh) {
             const struct aiVector3D* vertices = currentMesh->mVertices;
             const struct aiVector3D* normals = currentMesh->mNormals;
             const struct aiVector3D* textures = currentMesh->mTextureCoords[0];
-            
+
             Vec3f fPoints[3] = {
                 { .x = vertices[face->mIndices[0]].x, .y = vertices[face->mIndices[0]].y, .z = vertices[face->mIndices[0]].z },
                 { .x = vertices[face->mIndices[1]].x, .y = vertices[face->mIndices[1]].y, .z = vertices[face->mIndices[1]].z },
@@ -77,8 +77,22 @@ int loadObjFile(char* filepath, Mesh* mesh) {
             }
 
             array_push(mesh->faces, f);
+            mesh->numVertices += 3;;
+            mesh->numFaces++;
         }
     }
+
+    // matrixCreate(4, mesh->numVertices, &mesh->vertices);
+    // for (int f = 0; f < mesh->numFaces; f++) {
+    //     Vec3f v1 = mesh->faces[f].points[0];
+    //     Vec3f v2 = mesh->faces[f].points[1];
+    //     Vec3f v3 = mesh->faces[f].points[2];
+
+    //     matrixLoadVec4f(mesh->vertices, f, createVec4f(v1.x, v1.y, v1.z, 1.0f));
+    //     matrixLoadVec4f(mesh->vertices, f+1, createVec4f(v2.x, v2.y, v2.z, 1.0f));
+    //     matrixLoadVec4f(mesh->vertices, f+2, createVec4f(v3.x, v3.y, v3.z, 1.0f));
+    // }
+
 
     printf("Number of materials: %u\n", scene->mNumMaterials);
     for (unsigned k = 0; k < scene->mNumMaterials; k++) {

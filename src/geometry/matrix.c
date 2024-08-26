@@ -144,6 +144,49 @@ void matrixInverse(Matrix m, Matrix *out) {
     }
 }
 
+/*******************************************************/
+/*********** VECTOR TO MATRIX OPERATIONS ***************/
+/*******************************************************/
+void matrixLoadVec3f(Matrix m, int col, Vec3f data) {
+    // float data[3] = {data->x, data->y, data->z};
+    m.data[0 * m.cols + col] = data.x;
+    m.data[1 * m.cols + col] = data.y;
+    m.data[2 * m.cols + col] = data.z;
+}
+
+void matrixLoadVec4f(Matrix m, int col, Vec4f data) {
+    m.data[0 * m.cols + col] = data.x;
+    m.data[1 * m.cols + col] = data.y;
+    m.data[2 * m.cols + col] = data.z;
+    m.data[3 * m.cols + col] = data.w;
+}
+
+Vec3f matrixGetVec3f(Matrix m, int col) {
+    Vec3f v = {
+        .x = m.data[0 * m.cols + col],
+        .y = m.data[1 * m.cols + col],
+        .z = m.data[2 * m.cols + col]
+    };
+    return v;
+}
+
+Vec4f matrixGetVec4f(Matrix m, int col) {
+    Vec4f v = {
+        .x = m.data[0 * m.cols + col],
+        .y = m.data[1 * m.cols + col],
+        .z = m.data[2 * m.cols + col],
+        .w = m.data[3 * m.cols + col]
+    };
+    return v;
+}
+
+void matrixLoadColumn(Matrix m, int col, float *data) {
+    for (int i = 0; i < m.rows; i++) {
+        data[i] = m.data[i * m.cols + col];
+    }
+}
+
+
 void matrixIdentity(int rows, int cols, Matrix *out) {
     if (out->data == NULL) matrixCreate(rows, cols, out);
     for (int i = 0; i < rows; i++) {

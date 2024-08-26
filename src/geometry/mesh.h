@@ -2,6 +2,7 @@
 #define MESH_H
 
 #include "geometry.h"
+#include "matrix.h"
 #include <stdio.h>
 
 #define N_CUBE_VERTICES 8
@@ -18,9 +19,12 @@ typedef struct {
     // Vec3f* normals;
     // Vec2f* textures;
     Face* faces;
+    Matrix vertices;
     Vec3f rotation;
     Vec3f scale;
     Vec3f translation;
+    int numVertices;
+    int numFaces;
 } Mesh;
 
 extern Mesh mesh;
