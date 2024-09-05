@@ -11,7 +11,9 @@ CFLAGS = -Wall -Wextra -I/usr/include/SDL2
 # lsdl2 is the SDL2 library
 # lm is the math library
 # lassimp is the assimp library
-LDFLAGS = -lSDL2 -lm -lassimp
+# pthread is the POSIX thread library
+LDFLAGS = -lSDL2 -lm -lassimp -lpthread
+
 # LDFLAGS = -lSDL2 -lm
 DEBUG_FLAGS = -g
 

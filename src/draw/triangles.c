@@ -2,18 +2,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int drawTriangle(Vec2f* points, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY) {
-    drawLine(points[0], points[1], color, buffer, bufferWidth, boundX, boundY);
-    drawLine(points[1], points[2], color, buffer, bufferWidth, boundX, boundY);
-    drawLine(points[2], points[0], color, buffer, bufferWidth, boundX, boundY);
+int drawTriangle(Vec2f* points, uint32_t color, Display display) {
+    drawLine(points[0], points[1], color, display);
+    drawLine(points[1], points[2], color, display);
+    drawLine(points[2], points[0], color, display);
 
     return 1;
 }
 
-int drawTriangleFill(Vec4f* points, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY) { // Sort the vertices
+int drawTriangleFill(Vec4f* points, uint32_t color, Display display) { // Sort the vertices
     Vec4f v1 = points[0];
     Vec4f v2 = points[1];
     Vec4f v3 = points[2];
+
+    // zBuffer
+    float* zBuffer = display.zBuffer;
+    int bufferWidth = display.WINDOW_W;
 
     if (v1.y > v2.y) {
         swapVec4(&v1, &v2);
@@ -52,7 +56,7 @@ int drawTriangleFill(Vec4f* points, uint32_t color, uint32_t* buffer, int buffer
 
             // Only draw the pixel if the depth value is less than the one previously stored in the z-buffer
             if (w > zBuffer[(bufferWidth*y) + x]) continue;
-            drawPixel(x, y, color, buffer, bufferWidth, boundX, boundY);
+            drawPixel(x, y, color, display);
             // Upadate the zBuffer 
             zBuffer[(bufferWidth * y) + x] = w;
         }

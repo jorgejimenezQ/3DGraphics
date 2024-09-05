@@ -1,22 +1,58 @@
 #include "display.h"
 
-SDL_Window* window = NULL;
-SDL_Renderer* renderer = NULL;
-SDL_Texture* colorBufferTexture = NULL;
+static SDL_Window* window = NULL;
+static SDL_Renderer* renderer = NULL;
+static SDL_Texture* colorBufferTexture = NULL;
 // Buffer to store the color of each pixel in the window
-uint32_t resetColor = 0XFF000000;
-uint32_t* colorBuffer = NULL;
-float* zBuffer = NULL;
+static uint32_t* colorBuffer = NULL;
+static float* zBuffer = NULL;
 
+static uint32_t resetColor = 0XFF000000;
 // Window dimensions
-int WINDOW_W;
-int WINDOW_H;
+static int WINDOW_W = 320;
+static int WINDOW_H = 240;
+static bool isPixelated = true;
+static int resolutionScale = 2;
 // int windowWidth = 500;
 // int windowHeight = 600;
 
-bool fullScreen = false;
+static bool fullScreen = false;
 
+WindowDimensions getWindowDimensions(void) {
+    return (WindowDimensions){WINDOW_W, WINDOW_H};
+}
 
+uint32_t* getColorBuffer(void) {
+    return colorBuffer;
+}
+
+void clearBuffer(uint32_t color) {
+    renderColorBuffer(); // Render the color buffer to the screen
+    // 0X00000000
+    clearColorBuffer(color);
+    clearZBuffer();
+
+    SDL_RenderPresent(renderer);
+}
+
+void freeDisplay(void) {
+    free(colorBuffer);
+    free(zBuffer);
+}
+
+Display getDisplay(void) {
+    return (Display){
+        .colorBuffer = colorBuffer,
+        .zBuffer = zBuffer,
+        .window = window,
+        .renderer = renderer,
+        .colorBufferTexture = colorBufferTexture,
+        .resetColor = resetColor,
+        .WINDOW_W = WINDOW_W,
+        .WINDOW_H = WINDOW_H,
+        .fullScreen = fullScreen
+    };
+}
 
 bool initFullScreenWindow() {
     fullScreen = true;
@@ -54,8 +90,13 @@ bool initWindow(int windowWidth, int windowHeight, bool fullScreen) {
         windowHeight = displayMode.h;
     }
 
-    WINDOW_W = windowWidth;
-    WINDOW_H = windowHeight;
+    if (!isPixelated) {
+        WINDOW_H = windowHeight;
+        WINDOW_W = windowWidth;
+    } else {
+        WINDOW_H = windowHeight / resolutionScale;
+        WINDOW_W = windowWidth / resolutionScale;
+    }
 
     // Create a SDL window
     window = SDL_CreateWindow(
@@ -89,6 +130,33 @@ bool initWindow(int windowWidth, int windowHeight, bool fullScreen) {
     // check https://wiki.libsdl.org/SDL_SetWindowFullscreen for more information
     if (fullScreen) SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 
+    // Allocate memory for the color buffer
+    colorBuffer = (uint32_t*)malloc(sizeof(uint32_t) * WINDOW_W * WINDOW_H);
+    if (!colorBuffer) {
+        fprintf(stderr, "Error allocating memory for color buffer.\n");
+        return false;
+    }
+
+    // Allocate memory for the z buffer
+    zBuffer = (float*)malloc(sizeof(float) * WINDOW_W * WINDOW_H);
+
+    if (!zBuffer) {
+        fprintf(stderr, "Error allocating memory for z buffer.\n");
+        return false;
+    }
+
+    // Create a SDL texture
+    // SDL_PIXELFORMAT_ARGB8888 is a 32-bit pixel format, with alpha, red, green, and blue channels
+    // check https://wiki.libsdl.org/SDL_CreateTexture for more information
+    // SDL_TEXTUREACCESS_STREAMING means that the texture will be updated frequently
+    colorBufferTexture = SDL_CreateTexture(
+            renderer,
+            SDL_PIXELFORMAT_RGBA8888,
+            SDL_TEXTUREACCESS_STREAMING,
+            WINDOW_W,
+            WINDOW_H
+    );
+
     return true;
 }
 
@@ -106,10 +174,8 @@ void clearZBuffer(void) {
 }
 
 void clearColorBuffer(uint32_t color) {
-    for (int y = 0; y < WINDOW_H; y++) {
-        for (int x = 0; x < WINDOW_W; x++) {
-            colorBuffer[(WINDOW_W * y) + x] = color;
-        }
+    for (int i = 0; i < WINDOW_W * WINDOW_H; i++) {
+        colorBuffer[i] = color;
     }
 }
 

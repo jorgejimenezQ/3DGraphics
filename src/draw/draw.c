@@ -14,7 +14,13 @@ void swapVec4(Vec4f* v1, Vec4f* v2) {
         *v2 = *v1;
         *v1 = temp;
 }
-int drawPixel(int x, int y, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY) {
+int drawPixel(int x, int y, uint32_t color, Display display) {
+
+    uint32_t* buffer = display.colorBuffer;
+    int bufferWidth = display.WINDOW_W;
+    int boundX = display.WINDOW_W;
+    int boundY = display.WINDOW_H;
+    
 
     // Keep the pixel bounded by boundX and boundY parameters and greater than one 
     // if (0 > x || x > (boundX - 1)) return -1;
@@ -34,7 +40,7 @@ int drawPixel(int x, int y, uint32_t color, uint32_t* buffer, int bufferWidth, i
     return 1;
 }
 
-int drawLine(Vec2f v1, Vec2f v2, uint32_t color, uint32_t *buffer, int bufferWidth, int boundX, int boundY) {
+int drawLine(Vec2f v1, Vec2f v2, uint32_t color, Display display) {
     int dx = (v2.x - v1.x);   
     int dy = (v2.y - v1.y);   
 
@@ -47,7 +53,7 @@ int drawLine(Vec2f v1, Vec2f v2, uint32_t color, uint32_t *buffer, int bufferWid
     float currentY = v1.y;
 
     for (int i = 0; i < sideLength; i++) {
-        drawPixel(round(currentX), round(currentY), color, buffer, bufferWidth, boundX, boundY);
+        drawPixel(round(currentX), round(currentY), color, display);
 
         currentX += xInc;
         currentY += yInc;

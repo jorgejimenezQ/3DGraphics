@@ -11,6 +11,7 @@ typedef struct {
     Vec3f direction;
     Vec3f forwardVelocity;
     float yaw;
+    float pitch;
 } Camera;
 
 // Define any constants or macros

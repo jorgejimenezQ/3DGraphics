@@ -1,3 +1,4 @@
+#include "input/input.h"
 #include "array.h"
 #include "./display/display.h"
 #include "errors/errors.h"
@@ -11,12 +12,12 @@
 #include "./utils/utils.h"
 #include "./camera/camera.h"
 #include "./clipping/clipping.h"
-#include "input/input.h"
 
 /************************************************************************ */
 // Array of triangles to render on the screen
 /************************************************************************ */
 #define MAX_TRIANGLES_PER_MESH 10000
+
 Triangle trianglesToRender[MAX_TRIANGLES_PER_MESH];
 int numTrianglesToRender = 0;
 
@@ -31,7 +32,7 @@ bool isRunning = false;
 int prevFrameTime;
 
 // array of three random colors
-uint32_t BACKGROUND_COLOR = 0X000000FF;
+uint32_t BACKGROUND_COLOR = 0X333333FF;
 uint32_t FOREGROUND_COLOR = 0XFFFFFFFF;
 uint32_t OUTLINE_COLOR = 0XFF00FFFF;
 uint32_t RED = 0XFF0000FF;
@@ -43,13 +44,21 @@ bool hasBackFaceCulling = false;
 char transformations = '.';
 Matrix perspectiveMatrix;
 
-// 
-float dt = 0.0;
+// mouse
+int mouseX = 0;
+int mouseY = 0;
+float mouseDeltaX = 0;
+float mouseDeltaY = 0;
+
+// Keyboard
+MovementDirection keyPressed = '.';
 
 // drawing context
 DrawingContext dc;
 
 Vec3f pointToRender[20];
+
+float dt = 0.0;
 
 void rect(int x, int y, int w, int h, uint32_t color);
 void setup(void);
@@ -57,40 +66,45 @@ void processInput(void);
 void update(float deltaTime);
 void render(void);
 void game(void);
-void processTransformation(void);
 void freeResources(void);
-void moveCamera(MovementDirection key);
+void updateCameraPosition(float dt);
+void updateCameraDirection(float deltaX, float deltaY, float dt);
 
 int main(void) {
     game();
-    // Matrix m;
-    // // print the memory address of the matrix
-    // printf("Memory address of the matrix: %p\n", &m);
-    // // print the memory address of the matrix's data
-    // printf("Memory address of the matrix's data: %p\n", m.data);
-
-    // matrixCreate(4, 4, &m);
-    // matrixIdentity(4, 4, &m);
-    // Matrix b;
-    // matrixCopy(m, &b);
-
-    // // print the memory address of the matrix
-    // printf("Memory address of the matrix: %p\n", &m);
-    // // print the memory address of the matrix's data
-    // printf("Memory address of the matrix's data: %p\n", m.data);
-
-    // matrixPrint(m);
-    // matrixFree(m);
-    // matrixFree(b);
     return 0;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Process the graphics pipeline stages for all the mesh triangles
+///////////////////////////////////////////////////////////////////////////////
+// +-------------+
+// | Model space |  <-- original mesh vertices
+// +-------------+
+// |   +-------------+
+// `-> | World space |  <-- multiply by world matrix
+//     +-------------+
+//     |   +--------------+
+//     `-> | Camera space |  <-- multiply by view matrix
+//         +--------------+
+//         |    +------------+
+//         `--> |  Clipping  |  <-- clip against the six frustum planes
+//              +------------+
+//              |    +------------+
+//              `--> | Projection |  <-- multiply by projection matrix
+//                   +------------+
+//                   |    +-------------+
+//                   `--> | Image space |  <-- apply perspective divide
+//                        +-------------+
+//                        |    +--------------+
+//                        `--> | Screen space |  <-- ready to render
+//                             +--------------+
+///////////////////////////////////////////////////////////////////////////////
 void update(float deltaTime) {
-
     int numFaces = array_length(mesh.faces);
 
     /***************TRANSFORMATIONS MATRICES**************/
-    mesh.translation.z = 4;
+    // mesh.translation.z = 6;
 
     Matrix scaleMatrix;
     Matrix translationMatrix;
@@ -124,33 +138,16 @@ void update(float deltaTime) {
     /**********VIEW MATRIX************/
     Matrix viewMatrix;
     matrixCreate(4, 4, &viewMatrix);
-    // TODO: Handle the camera movement. the target and the up vector
-    Matrix temp;
-    matrixCreateWithData(4, 1, (float[]){0, 0, 1, 0}, &temp);
-    Matrix yawRotation;
-    matrixCreate(4, 4, &yawRotation);
-    createRotationMatrix(&yawRotation, camera.yaw, 'y');
-    matrixMult(yawRotation, temp, &temp);  
+    // updateCameraDirection(mouseDeltaX, mouseDeltaY, deltaTime);
+    // updateCameraPosition(deltaTime);
 
-    camera.direction.x = temp.data[0];
-    camera.direction.y = temp.data[1];
-    camera.direction.z = temp.data[2];
-
+    // calculate the target of the camera
     Vec3f target = vec3add(camera.position, camera.direction);
-
-    createLookAt(camera.position, 
-            target,
-            (Vec3f){0, 1, 0}, 
-            &viewMatrix
-    );
-
-    matrixFree(temp);
-    matrixFree(yawRotation);
+    createLookAt(camera.position, target, (Vec3f){0, 1, 0}, &viewMatrix);
 
     numTrianglesToRender = 0;
     // Get all the faces
     for (int i = 0; i < numFaces && numTrianglesToRender < MAX_TRIANGLES_PER_MESH; i++) {
-
         Polygon polygon; // the polygon to be clipped
         Face currentFace = mesh.faces[i]; // get the current face
         Matrix transformedVertices[3]; // the transformed vertices
@@ -207,9 +204,10 @@ void update(float deltaTime) {
             matrixCreateFromV4(newTriangles[j].points[0], &tempTriMatrix[0]);
             matrixCreateFromV4(newTriangles[j].points[1], &tempTriMatrix[1]);
             matrixCreateFromV4(newTriangles[j].points[2], &tempTriMatrix[2]);
+            WindowDimensions windowDimensions = getWindowDimensions();
 
             // our array of triangles
-            projectTriangle(tempTriMatrix, &perspectiveMatrix, WINDOW_W, WINDOW_H, &newTriangles[j]);
+            projectTriangle(tempTriMatrix, &perspectiveMatrix, windowDimensions.width, windowDimensions.height, &newTriangles[j]);
             newTriangles[j].color = faceColor;
 
             trianglesToRender[numTrianglesToRender] = newTriangles[j];
@@ -252,13 +250,16 @@ void game(void) {
         processInput();
         // Update the game state with the time difference in seconds
         dt = deltaTime / 1000.0;
-        update(dt);
+        update(deltaTime / 1000.0);
         render();
 
         frameCount++;
         Uint32 currentTime = SDL_GetTicks();
         deltaTime = currentTime - previousTime;
         previousTime = currentTime;
+
+        // Get the number of cores in the CPU
+        // printf("Number of cores: %d\n", SDL_GetCPUCount());
 
         if (currentTime - startTime >= 1000) {
             actualFPS = frameCount;
@@ -278,6 +279,10 @@ void game(void) {
             printf("Back Face Culling: %s\n", hasBackFaceCulling ? "ON" : "OFF");
             printf("Transformations: %c\n", transformations);
             printf("%d triangles are being rendered\n", numTrianglesToRender);
+
+            // Pint the mouse position
+            printf("Mouse Position: (%d, %d)\n", mouseX, mouseY);
+            printf("mouse change: (%d, %d)\n", mouseDeltaX, mouseDeltaY);
             // reset the color to default
             printf("\033[0m");
         }
@@ -293,70 +298,36 @@ void game(void) {
 }
 
 void rect(int x, int y, int w, int h, uint32_t color) {
+    Display display = getDisplay();
     fillRect(
             x, 
             y,
             w,
             h,
             color,
-            colorBuffer,
-            WINDOW_W,
-            WINDOW_W -1,
-            WINDOW_H - 1
+            display
     );
 
 }
 
 void setup(void) {
-    // (uint32_t*) is a type cast to convert the pointer to a uint32_t pointer
-    // malloc is a function that allocates memory in the heap
-    colorBuffer = (uint32_t*)malloc(sizeof(uint32_t) * WINDOW_W * WINDOW_H);
-    if (!colorBuffer) {
-        fprintf(stderr, "Error allocating memory for color buffer.\n");
-        exit(1);
-    }
-
-    zBuffer = (float*)malloc(sizeof(float) * WINDOW_W * WINDOW_H);
-    if (!zBuffer) {
-        fprintf(stderr, "Error allocating memory for z buffer.\n");
-        exit(1);
-    }
-
     // Light
     light.direction = vec3normalize((Vec3f){0, 0, 1});
-
-    // Create a SDL texture
-    // SDL_PIXELFORMAT_ARGB8888 is a 32-bit pixel format, with alpha, red, green, and blue channels
-    // check https://wiki.libsdl.org/SDL_CreateTexture for more information
-    // SDL_TEXTUREACCESS_STREAMING means that the texture will be updated frequently
-    colorBufferTexture = SDL_CreateTexture(
-            renderer,
-            SDL_PIXELFORMAT_RGBA8888,
-            SDL_TEXTUREACCESS_STREAMING,
-            WINDOW_W,
-            WINDOW_H
-    );
-
-    // Get the hardcoded values for the texture
-    // brickTexture = (uint32_t* )REDBRICK_TEXTURE;
-    // 0xEEAE00
-
-    // loadObjFile("assets/cube.obj");
     // loadCubeMeshData();
-    if (loadObjFile("assets/new assets/crab.obj", &mesh) == -1) {
+    if (loadObjFile("assets/new assets/f117.obj", &mesh) == -1) {
         printf("Error loading the mesh file\n");
         exit(1);
     }
 
-
-    if (loadTextureFile("assets/new assets/crab.png", &meshTextureWidth, &meshTextureHeight) == -1) {
+    if (loadTextureFile("assets/new assets/f117.png", &meshTextureWidth, &meshTextureHeight) == -1) {
         printf("Error loading the png file\n");
         exit(1);
     }
 
+    WindowDimensions windowDimensions = getWindowDimensions();
     // Initialize the perspective projection matrix
-    float aspectY = (float)WINDOW_H/(float)WINDOW_W;
-    float aspectX = (float)WINDOW_W/(float)WINDOW_H;
+    float aspectY = (float)windowDimensions.height/(float)windowDimensions.width;
+    float aspectX = (float)windowDimensions.width/(float)windowDimensions.height;
     float fovY =  3.141592 / 3.0; // the same as 180/3, or 60deg
     float fovX = atan(tan(fovY/2) * aspectX) * 2;
     float znear = 1;
@@ -365,41 +336,49 @@ void setup(void) {
 
     // Initialize the frustum
     initializeFrustumPlanes(fovX, fovY, znear, zfar);
-
-    // Drawing context for the clipping tool (used for debugging)
-    dc.boundX = WINDOW_W;
-    dc.boundY = WINDOW_H;
-    dc.buffer = colorBuffer;
-    dc.bufferWidth = WINDOW_W;
-    setDrawingContext_clipping(&dc);
 }
 
 void processInput(void) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-    
         switch(event.type) {
             case SDL_QUIT: {
                 isRunning = false;
+                break;
+            }
+            case SDL_MOUSEMOTION: {
+                mouseDeltaX = mouseX - event.motion.x;
+                mouseDeltaY = mouseY - event.motion.y;
+                mouseX = event.motion.x;
+                mouseY = event.motion.y;
+
+                updateCameraDirection(mouseDeltaX, mouseDeltaY, dt);
                 break;
             }
             case SDL_KEYDOWN: {
                 SDL_KeyCode key = event.key.keysym.sym;
                 if (key == SDLK_ESCAPE) {
                     isRunning = false;
+                    break;
                 }
 
                 if (isRenderOption(key)) {
                     renderMode = (RenderMode)key;
+                    break; 
                 }
+
 
                 if (key == BACK_FACE_CULLING || key == BACK_FACE_CULLING_DISABLED) {
                     hasBackFaceCulling = (key == BACK_FACE_CULLING) ? true : false;
+                    break;
                 }
 
                 if (isMovementDirection(key)) {
-                    moveCamera((MovementDirection)key);
+                    keyPressed = (MovementDirection)key;
+                    updateCameraPosition(dt);
+                    break;
                 }
+                break;
             }
             default: {
                 break;
@@ -410,10 +389,12 @@ void processInput(void) {
 }
 
 void renderLine(Vec2f v1, Vec2f v2, uint32_t color) {
-    drawLine(v1, v2, color, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+    Display display = getDisplay();
+    drawLine(v1, v2, color, display);
 }
 
 void render(void) {
+    Display display = getDisplay();
     // for (int i = numTrianglesToRender - 1; i >= 0; i--) {
     for (int i = 0; i < numTrianglesToRender; i++) {
         Triangle triangle = trianglesToRender[i];
@@ -423,15 +404,15 @@ void render(void) {
             (Vec2f){triangle.points[2].x, triangle.points[2].y}
         };
         if (renderMode == FILL || renderMode == FILLED_OUTLINE) {
-            drawTriangleFill(triangle.points, triangle.color, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+            drawTriangleFill(triangle.points, triangle.color, display);
         }
         
         if (renderMode == TEXTURE || renderMode == TEXTURE_OUTLINE) {
-            drawTriangleBar(triangle.points, triangle.uvTexture, mesh_texture, meshTextureHeight, meshTextureWidth, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+            drawTriangleBar(triangle.points, triangle.uvTexture, mesh_texture, meshTextureHeight, meshTextureWidth, display);
         }
 
         if (renderMode == OUTLINE || renderMode == FILLED_OUTLINE || renderMode == TEXTURE_OUTLINE || renderMode == POINTS_OUTLINE) {
-            drawTriangle(tPoints, OUTLINE_COLOR, colorBuffer, WINDOW_W, WINDOW_W, WINDOW_H);
+            drawTriangle(tPoints, OUTLINE_COLOR, display);
         }
 
         if (renderMode == POINTS || renderMode == POINTS_OUTLINE) {
@@ -442,23 +423,22 @@ void render(void) {
     }
 
     // Update the texture with new color buffer
-    renderColorBuffer(); // Render the color buffer to the screen
-    // 0X00000000
-    clearColorBuffer(BACKGROUND_COLOR);
-    clearZBuffer();
-    SDL_RenderPresent(renderer);
+    // renderColorBuffer(); // Render the color buffer to the screen
+    // // 0X00000000
+    // clearColorBuffer(BACKGROUND_COLOR);
+    // clearZBuffer();
+    clearBuffer(BACKGROUND_COLOR);
+
 }
 void freeResources() {
     textureFree();
-    free(colorBuffer);
-    free(zBuffer);
+    freeDisplay();
     matrixFree(perspectiveMatrix);
-    // Dynamic array free 
     array_free(mesh.faces);
 }
 
-void moveCamera(MovementDirection key) {
-    switch(key) {
+void updateCameraPosition(float dt) {
+    switch(keyPressed) {
         case UP: {
             camera.position.y += 3 * dt;
             break;
@@ -468,22 +448,46 @@ void moveCamera(MovementDirection key) {
             break;
         }
         case LEFT: {
-            camera.yaw += 3.0 * dt;
+            camera.position = vec3sub(camera.position, vec3mult(vec3cross(camera.direction, (Vec3f){0, 1, 0}), 3 * dt));
+           
             break;
         }
         case RIGHT: {
-            camera.yaw -= 3.0 * dt;
+            camera.position = vec3add(camera.position, vec3mult(vec3cross(camera.direction, (Vec3f){0, 1, 0}), 3 * dt));
             break;
         }
         case FORWARD: {
-            camera.forwardVelocity = vec3mult(camera.direction, 3 * dt);
-            camera.position = vec3add(camera.position, camera.forwardVelocity);
+            Vec3f forwardProjection = { .x = camera.direction.x, .y = 0, .z = camera.direction.z};
+            Vec3f velocity = vec3mult(forwardProjection, 3 * dt);
+            camera.position = vec3add(camera.position, velocity);
             break;
         }
         case BACKWARD: {
-            camera.forwardVelocity = vec3mult(camera.direction, 3 * dt);
-            camera.position = vec3sub(camera.position, camera.forwardVelocity);
+            Vec3f forwardProjection = { .x = camera.direction.x, .y = 0, .z = camera.direction.z};
+            Vec3f velocity = vec3mult(forwardProjection, 3 * dt);
+            camera.position = vec3sub(camera.position, velocity);
+
             break;
         }
     }
+    keyPressed = '.';
+}
+ 
+float deg2rad(float degrees) {
+    return degrees * (3.14159265359 / 180.0);
+}
+
+void updateCameraDirection(float deltaX, float deltaY, float dt) {
+    if (deltaX == 0 && deltaY == 0) return;
+    float sensitivity = 3;
+    camera.yaw += deltaX * sensitivity * dt;
+    camera.pitch += deltaY * sensitivity * dt;
+
+    if (camera.pitch > 89.0) camera.pitch = 89.0;
+    if (camera.pitch < -89.0) camera.pitch = -89.0;
+
+    camera.direction.x = cos(deg2rad(camera.yaw)) * cos(deg2rad(camera.pitch));
+    camera.direction.y = sin(deg2rad(camera.pitch));
+    camera.direction.z = sin(deg2rad(camera.yaw)) * cos(deg2rad(camera.pitch));
+    camera.direction = vec3normalize(camera.direction);
 }

@@ -14,16 +14,16 @@ typedef struct {
 } DrawingContext;
 
 // PIXELS & LINES
-int drawPixel(int x, int y, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY);
-int drawLine(Vec2f v1, Vec2f v2, uint32_t color, uint32_t *buffer, int bufferWith, int boundX, int boundY);
+int drawPixel(int x, int y, uint32_t color, Display display);
+int drawLine(Vec2f v1, Vec2f v2, uint32_t color, Display display);
 // TRIANGLES
-int drawTriangle(Vec2f* points, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY);
-int drawTriangleFill(Vec4f* points, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY);
-int drawTriangleBar(Vec4f* points, Vec2f* uvTexture, uint32_t* texture, int textureH, int textureW, uint32_t* buffer, int bufferWidth, int boundX, int boundY);
+int drawTriangle(Vec2f* points, uint32_t color, Display display);
+int drawTriangleFill(Vec4f* points, uint32_t color, Display display);
+int drawTriangleBar(Vec4f* points, Vec2f* uvTexture, uint32_t* texture, int textureH, int textureW, Display display);
 
 // RECTANGLES
-int fillRect(int x, int y, int width, int height, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY);
-int rectangle(int x, int y, int width, int height, uint32_t color, uint32_t* buffer, int bufferWidth, int boundX, int boundY);
+int fillRect(int x, int y, int width, int height, uint32_t color, Display display);
+int rectangle(int x, int y, int width, int height, uint32_t color, Display display);
 
 // HELPERS
 void swap(Vec2f* v1, Vec2f* v2);

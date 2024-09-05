@@ -18,7 +18,9 @@
         "vector": "c",
         "draw.h": "c",
         "matrix.h": "c",
-        "transformations.h": "c"
+        "transformations.h": "c",
+        "atomic": "c",
+        "cstdint": "c"
     },
     "cSpell.words": ["zfar", "znear"]
 }
