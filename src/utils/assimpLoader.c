@@ -16,9 +16,9 @@ int loadObjFile(char* filepath, Mesh* mesh) {
      * - aiProcess_GenNormals: Generates normals for the model if they are not present.
      */
     const struct aiScene* scene = aiImportFile(filepath, 
-                        aiProcess_FlipUVs 
-                        // | aiProcess_FlipWindingOrder
-                        );
+        aiProcess_FlipUVs 
+        // | aiProcess_FlipWindingOrder
+    );
 
     if (!scene) {
         printf("ERROR::ASSIMP:: %s\n", aiGetErrorString());

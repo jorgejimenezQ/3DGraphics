@@ -12,7 +12,7 @@ static uint32_t resetColor = 0XFF000000;
 static int WINDOW_W = 320;
 static int WINDOW_H = 240;
 static bool isPixelated = true;
-static int resolutionScale = 2;
+static int resolutionScale = 3;
 // int windowWidth = 500;
 // int windowHeight = 600;
 
