@@ -21,13 +21,166 @@ clang -Wall -Wextra -I/usr/include/SDL2 -c src/clipping/clipping.c -o src/clippi
 clang -Wall -Wextra -I/usr/include/SDL2 -c src/clipping/polygon.c -o src/clipping/polygon.o
 clang -Wall -Wextra -I/usr/include/SDL2 -o renderer src/array.o src/main.o src/errors/errors.o src/display/display.o src/draw/draw.o src/draw/rec.o src/draw/triangleBarycentric.o src/draw/triangles.o src/geometry/barycentric.o src/geometry/geometry.o src/geometry/matrix.o src/geometry/mesh.o src/geometry/transformations.o src/utils/assimpLoader.o src/utils/mergesort.o src/utils/upng.o src/texture/texture.o src/camera/camera.o src/input/input.o src/clipping/clipping.o src/clipping/polygon.o -lSDL2 -lm -lassimp
 ./renderer
-Model loaded: assets/new assets/cube.obj
-Number of meshes: 1
-Number of materials: 2
+[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2J[3J[H[2JModel loaded: assets/Dungeon Set 2/prop_floor_lever.obj
+Number of meshes: 5
+Number of materials: 4
 Mesh 0: 36 vertices, 12 faces
-Number of materials: 2
+Mesh 1: 132 vertices, 44 faces
+Mesh 2: 435 vertices, 145 faces
+Mesh 3: 78 vertices, 26 faces
+Mesh 4: 63 vertices, 21 faces
+Number of materials: 4
   No diffuse texture.
   Diffuse color: (0.600000, 0.600000, 0.600000, 1.000000)
   No diffuse texture.
-  Diffuse color: (0.600000, 0.600000, 0.600000, 1.000000)
-Window destroyed.
+  Diffuse color: (0.611800, 0.611800, 0.611800, 1.000000)
+  No diffuse texture.
+  Diffuse color: (0.478400, 0.478400, 0.478400, 1.000000)
+  No diffuse texture.
+  Diffuse color: (0.588200, 0.643100, 0.662700, 1.000000)
+[0;32mActual FPS: 16
+[0mRender Mode: 7
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 7
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 7
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 7
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 7
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 15
+[0mRender Mode: 7
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 7
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 7
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 15
+[0mRender Mode: 3
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 2
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 2
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 15
+[0mRender Mode: 4
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 5
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 15
+[0mRender Mode: 5
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 3
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 2
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 2
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 2
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 15
+[0mRender Mode: 2
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 2
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 2
+Back Face Culling: OFF
+Transformations: .
+248 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 2
+Back Face Culling: OFF
+Transformations: .
+256 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 2
+Back Face Culling: OFF
+Transformations: .
+10 triangles are being rendered
+[0m[0;32mActual FPS: 15
+[0mRender Mode: 2
+Back Face Culling: OFF
+Transformations: .
+12 triangles are being rendered
+[0m[0;32mActual FPS: 15
+[0mRender Mode: 2
+Back Face Culling: OFF
+Transformations: .
+97 triangles are being rendered
+[0m[0;32mActual FPS: 15
+[0mRender Mode: 2
+Back Face Culling: OFF
+Transformations: .
+263 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 2
+Back Face Culling: OFF
+Transformations: .
+273 triangles are being rendered
+[0m[0;32mActual FPS: 16
+[0mRender Mode: 2
+Back Face Culling: OFF
+Transformations: .
+255 triangles are being rendered
+[0m[0;32mActual FPS: 15
+[0mRender Mode: 2
+Back Face Culling: OFF
+Transformations: .
+254 triangles are being rendered
+[0mWindow destroyed.

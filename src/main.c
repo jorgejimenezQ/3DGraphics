@@ -145,7 +145,13 @@ void update(float deltaTime) {
     Vec3f target = vec3add(camera.position, camera.direction);
     createLookAt(camera.position, target, (Vec3f){0, 1, 0}, &viewMatrix);
 
-    numTrianglesToRender = 0;
+    // /**********TRANSFORM THE WHOLE MATRIX OF COLUMN VECTORS************/
+    // Matrix transformationsMatrix;
+    // transformationsMatrix.data = NULL;  
+    // matrixMult(worldMatrix, mesh.vertices, &transformationsMatrix);
+    // matrixMult(viewMatrix, transformationsMatrix, &transformationsMatrix);
+    // numTrianglesToRender = 0;
+
     // Get all the faces
     for (int i = 0; i < numFaces && numTrianglesToRender < MAX_TRIANGLES_PER_MESH; i++) {
         Polygon polygon; // the polygon to be clipped
@@ -154,7 +160,8 @@ void update(float deltaTime) {
         uint32_t faceColor = FOREGROUND_COLOR ; // the face color
 
         transformFace(currentFace, &worldMatrix, &viewMatrix, transformedVertices);     
-        
+
+
         /******************************************************/
         // BACK FACE CULLING
         // Perform back face culling if enabled and it's the third vertex of the triangle
