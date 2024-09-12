@@ -314,12 +314,12 @@ void setup(void) {
     // Light
     light.direction = vec3normalize((Vec3f){0, 0, 1});
     // loadCubeMeshData();
-    if (loadObjFile("assets/new assets/f117.obj", &mesh) == -1) {
+    if (loadObjFile("assets/new assets/drone.obj", &mesh) == -1) {
         printf("Error loading the mesh file\n");
         exit(1);
     }
 
-    if (loadTextureFile("assets/new assets/f117.png", &meshTextureWidth, &meshTextureHeight) == -1) {
+    if (loadTextureFile("assets/new assets/drone.png", &meshTextureWidth, &meshTextureHeight) == -1) {
         printf("Error loading the png file\n");
         exit(1);
     }

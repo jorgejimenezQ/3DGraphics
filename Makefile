@@ -6,13 +6,13 @@
 
 CC = clang
 
-CFLAGS = -Wall -Wextra -I/usr/include/SDL2
+CFLAGS = -Wall -Wextra -I/usr/include/SDL2 -DACCELERATE_NEW_LAPACK -DACCELERATE_LAPACK_ILP64
 
 # lsdl2 is the SDL2 library
 # lm is the math library
 # lassimp is the assimp library
 # pthread is the POSIX thread library
-LDFLAGS = -lSDL2 -lm -lassimp -lpthread
+LDFLAGS = -lSDL2 -lm -lassimp -lpthread -framework Accelerate 
 
 # LDFLAGS = -lSDL2 -lm
 DEBUG_FLAGS = -g
