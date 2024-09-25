@@ -9,5 +9,9 @@
 *.obj
 *.OBJ
 
+.DS_Store
+
 # everything in the assets folder
 assets/*
+
+renderer

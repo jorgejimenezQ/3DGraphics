@@ -1,6 +1,18 @@
 #include "geometry.h"
 
 
+Transformations transformationsEmpty() {
+    Transformations transformations = {
+        .scale = { .x = 1, .y = 1, .z = 1 },
+        .translation = { .x = 0, .y = 0, .z = 0 },
+        .rotation = { .x = 0, .y = 0, .z = 0 },
+        .perspective = { .x = 0, .y = 0, .z = 0 },
+        .view = { .x = 0, .y = 0, .z = 0 },
+        .world = { .x = 0, .y = 0, .z = 0 },
+        .projection = { .x = 0, .y = 0, .z = 0 }
+    };
+    return transformations;
+}
 
 Vec3f rotateX(Vec3f v, float angle) {
     Vec3f rotatedVector = {

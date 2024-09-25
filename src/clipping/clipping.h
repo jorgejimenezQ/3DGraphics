@@ -2,7 +2,7 @@
 #define CLIPPING_H
 
 // Include any necessary headers here
-#include "../geometry/geometry.h"
+#include "../geometry/mesh.h"
 #include "../draw/draw.h"
 #include <math.h>
 

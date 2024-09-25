@@ -1,4 +1,5 @@
 #include "matrix.h"
+#include <Accelerate/Accelerate.h>  // Use Accelerate framework for BLAS and LAPACK
 
 void matrixCreate(int rows, int cols, Matrix *m) {
     m;
@@ -71,15 +72,15 @@ void matrixMult(Matrix m1, Matrix m2, Matrix *out) {
     }
     Matrix temp;
     matrixCreate(m1.rows, m2.cols, &temp);
-    for (int i = 0; i < m1.rows; i++) {
-        for (int j = 0; j < m2.cols; j++) {
-            float sum = 0;
-            for (int k = 0; k < m1.cols; k++) {
-                sum += m1.data[i * m1.cols + k] * m2.data[k * m2.cols + j];
-            }
-            temp.data[i * m2.cols + j] = sum;
-        }
-    }
+
+        // Call Accelerate BLAS function cblas_sgemm for matrix multiplication
+    cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+                m1.rows, m2.cols, m1.cols,          // Matrix dimensions
+                1.0f,              // Alpha (scaling factor for A * B)
+                m1.data, m1.cols,        // Matrix A and its leading dimension (4)
+                m2.data, m2.cols,        // Matrix B and its leading dimension (4)
+                0.0f,              // Beta (scaling factor for the initial C)
+                temp.data, temp.cols);   // Matrix C (result) and its leading dimension (4)
 
     matrixCopy(temp, out);
     matrixFree(temp);
@@ -143,6 +144,58 @@ void matrixInverse(Matrix m, Matrix *out) {
         }
     }
 }
+
+/*******************************************************/
+/*********** VECTOR TO MATRIX OPERATIONS ***************/
+/*******************************************************/
+void matrixLoadVec3f(Matrix m, int col, Vec3f data) {
+    // float data[3] = {data->x, data->y, data->z};
+    m.data[0 * m.cols + col] = data.x;
+    m.data[1 * m.cols + col] = data.y;
+    m.data[2 * m.cols + col] = data.z;
+}
+
+void matrixLoadVec4f(Matrix m, int col, Vec4f data) {
+    m.data[0 * m.cols + col] = data.x;
+    m.data[1 * m.cols + col] = data.y;
+    m.data[2 * m.cols + col] = data.z;
+    m.data[3 * m.cols + col] = data.w;
+}
+
+Vec3f matrixGetVec3f(Matrix m, int col) {
+    Vec3f v = {
+        .x = m.data[0 * m.cols + col],
+        .y = m.data[1 * m.cols + col],
+        .z = m.data[2 * m.cols + col]
+    };
+    return v;
+}
+
+Vec4f matrixGetVec4f(Matrix m, int col) {
+    Vec4f v = {
+        .x = m.data[0 * m.cols + col],
+        .y = m.data[1 * m.cols + col],
+        .z = m.data[2 * m.cols + col],
+        .w = m.data[3 * m.cols + col]
+    };
+    return v;
+}
+
+void matrixLoadColumn(Matrix m, int col, float *data) {
+    for (int i = 0; i < m.rows; i++) {
+        data[i] = m.data[i * m.cols + col];
+    }
+}
+
+float* matrixCol(Matrix m, int col) {
+    float *data = (float *)malloc(m.rows * sizeof(float));
+    for (int i = 0; i < m.rows; i++) {
+        data[i] = m.data[i * m.cols + col];
+    }
+
+    return data;
+}
+
 
 void matrixIdentity(int rows, int cols, Matrix *out) {
     if (out->data == NULL) matrixCreate(rows, cols, out);

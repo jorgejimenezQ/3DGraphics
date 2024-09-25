@@ -21,6 +21,8 @@ int drawTriangle(Vec2f* points, uint32_t color, Display display);
 int drawTriangleFill(Vec4f* points, uint32_t color, Display display);
 int drawTriangleBar(Vec4f* points, Vec2f* uvTexture, uint32_t* texture, int textureH, int textureW, Display display);
 
+int drawOptimizedTriangle(Vec4f* points, uint32_t color, Display display);
+
 // RECTANGLES
 int fillRect(int x, int y, int width, int height, uint32_t color, Display display);
 int rectangle(int x, int y, int width, int height, uint32_t color, Display display);

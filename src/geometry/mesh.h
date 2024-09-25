@@ -1,29 +1,54 @@
 #ifndef MESH_H
 #define MESH_H
 
+#include "../texture/texture.h"
 #include "geometry.h"
+#include "matrix.h"
 #include <stdio.h>
 
-#define N_CUBE_VERTICES 8
-#define N_CUBE_FACES (6 * 2) // 6 cube faces, 2 triangles per face
 
-extern Vec3f cubeVertices[N_CUBE_VERTICES];
-extern Face cubeFaces[N_CUBE_FACES];
-
+#define MAX_MATERIALS 30
 /*********************************************************/
 /*                                                      */
 /*********************************************************/
 typedef struct {
-    // Vec3f* vertices;
-    // Vec3f* normals;
-    // Vec2f* textures;
     Face* faces;
+    Matrix vertices;
     Vec3f rotation;
     Vec3f scale;
     Vec3f translation;
+    int numVertices;
+    int numFaces;
 } Mesh;
 
-extern Mesh mesh;
+typedef struct {
+    float r;
+    float g;
+    float b;
+} DiffuseColor;
+
+typedef struct {
+    Matrix vertices;
+    Face* faces;
+    int numVertices;
+    int numFaces;
+    bool externalTexture;
+    char* texturePath[MAX_MATERIALS];
+    DiffuseColor colors[MAX_MATERIALS];
+    Texture* textures[MAX_MATERIALS];
+    int numMaterials;
+} ModelData;   
+
+typedef struct {
+    Vec4f points[3];
+    Vec2f uvTexture[3];
+    uint32_t color;
+    float avgDepth;
+    ModelData *modelData;
+} Triangle;
+
+
+ModelData modelDataEmpty();
 
 void loadCubeMeshData(void);
 #endif
