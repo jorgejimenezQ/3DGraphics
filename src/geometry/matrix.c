@@ -187,6 +187,15 @@ void matrixLoadColumn(Matrix m, int col, float *data) {
     }
 }
 
+float* matrixCol(Matrix m, int col) {
+    float *data = (float *)malloc(m.rows * sizeof(float));
+    for (int i = 0; i < m.rows; i++) {
+        data[i] = m.data[i * m.cols + col];
+    }
+
+    return data;
+}
+
 
 void matrixIdentity(int rows, int cols, Matrix *out) {
     if (out->data == NULL) matrixCreate(rows, cols, out);

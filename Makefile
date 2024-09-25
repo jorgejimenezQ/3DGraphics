@@ -22,6 +22,7 @@ TARGET = renderer
 
 # source directries
 SRC_DIR = ./src
+GAME_OBJECTS_DIR = ./src/GameObjects
 ERRORS_DIR = ./src/errors
 DISPLAY_DIR = ./src/display
 DRAW_DIR = ./src/draw
@@ -33,7 +34,7 @@ INPUT_DIR = ./src/input
 CLIPPING_DIR = ./src/clipping
 
 # Add all the directories to an array
-DIRS = $(SRC_DIR) $(ERRORS_DIR) $(DISPLAY_DIR) $(DRAW_DIR) $(GEOMETRY_DIR) $(UTILS_DIR) $(TEXTURE_DIR) $(CAMERA_DIR) $(INPUT_DIR) $(CLIPPING_DIR)
+DIRS = $(SRC_DIR) $(ERRORS_DIR) $(DISPLAY_DIR) $(DRAW_DIR) $(GEOMETRY_DIR) $(UTILS_DIR) $(TEXTURE_DIR) $(CAMERA_DIR) $(INPUT_DIR) $(CLIPPING_DIR) $(GAME_OBJECTS_DIR)
 
 # Source files are stored in the SRC variable 
 # The main.c file is stored in the src directory
@@ -65,7 +66,7 @@ debug: clean $(TARGET)
 run: $(TARGET)
 	./$(TARGET)
 
-# Clean rule
+# Clean rule 
 clean:
 	rm -f $(OBJS) $(TARGET)
 

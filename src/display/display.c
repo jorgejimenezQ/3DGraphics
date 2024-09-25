@@ -75,6 +75,12 @@ bool initWindow(int windowWidth, int windowHeight, bool fullScreen) {
         return false;
     }
 
+    // Hide the mouse cursor
+    SDL_ShowCursor(SDL_DISABLE);
+
+    // Lock the mouse to the window and capture relative mouse motion
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+
     if (fullScreen) {
         // return true;
         // Get the current display mode of the primary display
@@ -105,7 +111,9 @@ bool initWindow(int windowWidth, int windowHeight, bool fullScreen) {
             SDL_WINDOWPOS_CENTERED,
             windowWidth,
             windowHeight,
-            SDL_WINDOW_BORDERLESS       
+            SDL_WINDOW_SHOWN 
+            // SDL_WINDOW_RESIZABLE
+            // SDL_WINDOW_BORDERLESS       
     );
 
     if (!window) {

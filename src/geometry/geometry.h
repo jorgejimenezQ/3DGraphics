@@ -17,27 +17,32 @@ typedef struct {
     float x, y, z, w;
 } Vec4f;
 
+typedef struct {
+    int x, y, z;
+} Vec3i;
+
 /***************************/
 
 typedef struct {
-    // // Indices of the vertices
-    // int a, b, c;
-    // // Indices of the normals
-    // int na, nb, nc;
-    // // Indices of the textures
-    // int ta, tb, tc;
-    // uint32_t color;
+    Vec3f scale;
+    Vec3f translation;
+    Vec3f rotation;
+    Vec3f perspective;
+    Vec3f view;
+    Vec3f world;
+    Vec3f projection;
+} Transformations;
+
+Transformations transformationsEmpty();
+
+typedef struct {
     Vec3f points[3];
     Vec3f normals[3];
     Vec2f uvTexture[3];
+    Vec3i indices;
+    int materialIndex;
 } Face;
 
-typedef struct {
-    Vec4f points[3];
-    Vec2f uvTexture[3];
-    uint32_t color;
-    float avgDepth;
-} Triangle;
 
 Vec3f rotateX(Vec3f v, float angle);
 Vec3f rotateY(Vec3f v, float angle);

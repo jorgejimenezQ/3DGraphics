@@ -40,10 +40,25 @@ void* drawTriangleThread(void* arg) {
     int textureH = data->textureH;
     int textureW = data->textureW;
 
+    Vec2f a = vec2sub((Vec2f){v2.x, v2.y}, (Vec2f){v1.x, v1.y});
+    Vec2f b = vec2sub((Vec2f){v3.x, v3.y}, (Vec2f){v1.x, v1.y});
+
+    float d00 = vec2dot(a, a);
+    float d01 = vec2dot(a, b);
+    float d11 = vec2dot(b, b);   
+
     for (int y = yStart; y <= yEnd; y++) {
         for (int x = data->xStart; x <= data->xEnd; x++) {
-            Vec2f p = {x, y};
-            if (!barycentric((Vec2f){v1.x, v1.y}, (Vec2f){v2.x, v2.y}, (Vec2f){v3.x, v3.y}, p, &uvw)) continue;
+            Vec2f c = vec2sub((Vec2f){x, y}, (Vec2f){v1.x, v1.y});
+            float d20 = vec2dot(c, a);
+            float d21 = vec2dot(c, b);
+            float denom = d00*d11 - d01*d01;
+            if (denom == 0) continue;
+            uvw.y = (d11*d20 - d01*d21)/denom; // v
+            uvw.z = (d00*d21 - d01*d20)/denom; // w
+            uvw.x = 1.0f - uvw.y - uvw.z; // u
+
+
             if (uvw.x < 0 || uvw.y < 0 || uvw.z < 0) continue;
             if (uvw.x > 1 || uvw.y > 1 || uvw.z > 1) continue;
             if (v1.w == 0 || v2.w == 0 || v3.w == 0) continue;

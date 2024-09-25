@@ -33,6 +33,7 @@ void matrixLoadVec3f(Matrix m, int col, Vec3f data);
 void matrixLoadVec4f(Matrix m, int col, Vec4f data);
 Vec3f matrixGetVec3f(Matrix m, int col);
 Vec4f matrixGetVec4f(Matrix m, int col);
+float* matrixCol(Matrix m, int col);
 
 // void matrixRow(Matrix *m, int row, float *data);
 void matrixPrint(Matrix m);

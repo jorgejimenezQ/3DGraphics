@@ -23,7 +23,7 @@ void assert(int condition, const char *message);
 /****************************/
 /*        ASSET LOADER      */
 /****************************/
-int loadObjFile(char* filepath, Mesh* mesh);
+ModelData loadMeshData(char* filepath);
 
 /****************************/
 /*        CLIENT EXAMPLES   */
